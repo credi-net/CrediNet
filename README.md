@@ -1,14 +1,18 @@
-# CrediBench Client [currently: not live]
+# CrediNet
+Client-side CrediNet Service: using CrediPred scores in practice for fact-checking and online retrieval.
+
+
+## CrediBench Client [currently: not live]
 
 Python client for the CrediGraph API.
 
-## Install
+### Install
 
 ```bash
 pip install credigraph
 ```
 
-## Usage
+### Usage
 
 ```python
 from credigraph import query
@@ -24,3 +28,4 @@ from credigraph import CrediGraphClient
 c = CrediGraphClient(token="hf_...")
 c.query("reuters.com")
 ```
+
