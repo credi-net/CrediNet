@@ -1,5 +1,16 @@
+<div align="center">
+
+
 # CrediNet
-Client-side CrediNet Service: using CrediPred scores in practice for fact-checking and online retrieval.
+
+<img src="img/credinet.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
+
+
+Client-side CrediNet Service: <br> using CrediPred scores in practice for fact-checking and online retrieval.
+
+</div>
+
+<br>
 
 
 ## CrediBench Client [currently: not live]
