@@ -7,7 +7,15 @@ name = "credigraph"
 version = "0.1.1"
 description = "Python client for the CrediGraph API"
 authors = [{name = "Complex Data Lab"}]
-dependencies = ["requests"]
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.10.8",
+    "pandas>=2.3.3",
+    "pyarrow>=22.0.0",
+    "requests",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+]
 
 [tool.setuptools]
 packages = ["credigraph"]
