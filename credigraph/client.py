@@ -2,7 +2,7 @@ import os
 import requests
 from typing import List
 
-DEFAULT_API_URL = "https://ekmpa-credibench-api.hf.space"
+DEFAULT_API_URL = "https://credi-net-credinet.hf.space"
 
 class CrediGraphClient:
     def __init__(self, api_url=None, token=None):
