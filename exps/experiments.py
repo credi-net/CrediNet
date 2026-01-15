@@ -39,6 +39,8 @@ DISPLAY_NAMES = {
     REG_COL: "score (DQR)",
 }
 
+Path("plots").mkdir(exist_ok=True)
+
 def flip_if_needed(domain: str) -> str:
     if pd.isna(domain):
         return domain
@@ -94,7 +96,7 @@ def plot_pr_curve(cls_df):
     plt.ylabel("Precision")
     plt.title("Precision-Recall curve")
     plt.tight_layout()
-    plt.savefig(f"{OUTPUT_PREFIX}_pr_curve.png", dpi=150)
+    plt.savefig(f"plots/{OUTPUT_PREFIX}_pr_curve.png", dpi=150)
     plt.close()
 
 def evaluate_by_source(cls_df):
@@ -198,7 +200,7 @@ def make_plots(reg_df, cls_df):
         plt.ylabel(DISPLAY_NAMES[SCORE_COL])
         plt.plot([0, 1], [0, 1], linestyle="--")
         plt.tight_layout()
-        plt.savefig(f"{OUTPUT_PREFIX}_regression_scatter.png", dpi=150)
+        plt.savefig(f"plots/{OUTPUT_PREFIX}_regression_scatter.png", dpi=150)
         plt.close()
 
     if not cls_df.empty:
@@ -207,14 +209,14 @@ def make_plots(reg_df, cls_df):
         plt.figure(figsize=(6, 4))
         sns.boxplot(data=cls_df, x=WEAK_COL, y="abs_error")
         plt.tight_layout()
-        plt.savefig(f"{OUTPUT_PREFIX}_error_by_label.png", dpi=150)
+        plt.savefig(f"plots/{OUTPUT_PREFIX}_error_by_label.png", dpi=150)
         plt.close()
 
         plt.figure(figsize=(6, 4))
         sns.histplot(data=cls_df, x=SCORE_COL, hue=WEAK_COL, bins=50, kde=True, element="step")
         plt.xlabel(DISPLAY_NAMES[SCORE_COL])
         plt.tight_layout()
-        plt.savefig(f"{OUTPUT_PREFIX}_score_by_label.png", dpi=150)
+        plt.savefig(f"plots/{OUTPUT_PREFIX}_score_by_label.png", dpi=150)
         plt.close()
 
 
