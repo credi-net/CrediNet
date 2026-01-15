@@ -25,6 +25,7 @@ KNOWN_SUFFIXES = {
 
 SCORES_PATH = "scores/inferred/mlpInfer_dec2024_pc1_embeddinggemma-300m_GNN-RNI.parquet"
 LABELS_PATH = "scores/labels/labels.csv"
+REG_LABELS_PATH = "scores/labels/regression/processed/domain_pc1.csv"
 LABEL_DIR = "scores/labels/classification/processed"
 OUTPUT_PREFIX = "eval"
 THRESHOLD = 0.5
@@ -68,37 +69,11 @@ def load_labels():
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
-def calibration_curve(cls_df, bins=10):
-    df = cls_df.copy()
-    df["bin"] = pd.cut(df[SCORE_COL], bins=bins, labels=False)
-
-    grouped = df.groupby("bin")
-    calib = grouped.agg(
-        mean_score=(SCORE_COL, "mean"),
-        empirical_rate=(WEAK_COL, "mean"),
-        count=(WEAK_COL, "size"),
-    ).dropna()
-
-    print("\nCalibration table:")
-    print(calib)
-
-    plt.figure(figsize=(6, 6))
-    plt.plot(calib["mean_score"], calib["empirical_rate"], marker="o")
-    plt.plot([0, 1], [0, 1], linestyle="--")
-    plt.xlabel(f"Mean {DISPLAY_NAMES[SCORE_COL]}")
-    plt.ylabel("Empirical P(reliable)")
-    plt.title("Calibration curve")
-    plt.tight_layout()
-    plt.savefig(f"{OUTPUT_PREFIX}_calibration_curve.png", dpi=150)
-    plt.close()
-
-    return calib
-
-def expected_calibration_error(calib):
-    w = calib["count"] / calib["count"].sum()
-    ece = (w * (calib["mean_score"] - calib["empirical_rate"]).abs()).sum()
-    print(f"\nExpected Calibration Error (ECE): {ece:.4f}")
-    return ece
+def load_regression_labels():
+    df = pd.read_csv(REG_LABELS_PATH)
+    df = df.rename(columns={"pc1": REG_COL})
+    df["norm_domain"] = df["domain"].apply(normalize)
+    return df[["norm_domain", REG_COL]]
 
 def inspect_errors(cls_df, k=20):
     fp = cls_df[(cls_df[WEAK_COL] == 1) & (cls_df["pred"] == 0)]
@@ -247,22 +222,22 @@ def main():
     labels_df = load_labels()
     print_label_distribution(labels_df)
 
-    label_set = set(labels_df["norm_domain"].dropna())
+    reg_labels_df = load_regression_labels()
+
+    label_set = set(labels_df["norm_domain"].dropna()) | set(reg_labels_df["norm_domain"].dropna())
     scores_df = stream_scores(label_set)
 
-    df = scores_df.merge(labels_df, on="norm_domain", how="inner")
+    df = scores_df.merge(labels_df, on="norm_domain", how="left")
+    df = df.merge(reg_labels_df, on="norm_domain", how="left")
     print(f"\nJoined rows: {len(df)}")
 
     reg_df, cls_df = evaluate(df)
     evaluate_by_source(cls_df)
     make_plots(reg_df, cls_df)
 
-    labels_df["in_graph"] = labels_df["norm_domain"].isin(label_set)
+    labels_df["in_graph"] = labels_df["norm_domain"].isin(set(scores_df["norm_domain"])) #isin(label_set)
     print("\nGraph coverage by source:")
     print(labels_df.groupby("source")["in_graph"].mean())
-
-    calib = calibration_curve(cls_df)
-    expected_calibration_error(calib)
 
     inspect_errors(cls_df)
     plot_pr_curve(cls_df)
