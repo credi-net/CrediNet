@@ -17,13 +17,6 @@ from sklearn.metrics import (
 from credigraph.utils.domain_handler import flip_if_needed, normalize_domain
 from pathlib import Path
 
-
-KNOWN_SUFFIXES = {
-    "com", "org", "net", "edu", "gov", "io",
-    "co.uk", "org.uk", "ac.uk",
-    "co.jp", "com.au", "org.au",
-}
-
 SCORES_PATH = "scores/inferred/mlpInfer_dec2024_pc1_embeddinggemma-300m_GNN-RNI.parquet"
 LABELS_PATH = "scores/labels/labels.csv"
 REG_LABELS_PATH = "scores/labels/regression/processed/domain_pc1.csv"
