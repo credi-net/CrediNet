@@ -21,4 +21,4 @@ dependencies = [
 packages = ["credigraph"]
 
 [project.urls]
-Homepage = "https://huggingface.co/spaces/ekmpa/credibench-api"
+Homepage = "https://huggingface.co/spaces/credi-net/CrediNet"
