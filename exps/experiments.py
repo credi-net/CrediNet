@@ -14,6 +14,7 @@ from sklearn.metrics import (
     classification_report,
 )
 
+from credigraph.utils.domain_handler import flip_if_needed, normalize_domain
 from pathlib import Path
 
 
@@ -41,32 +42,12 @@ DISPLAY_NAMES = {
 
 Path("plots").mkdir(exist_ok=True)
 
-def flip_if_needed(domain: str) -> str:
-    if pd.isna(domain):
-        return domain
-    domain = domain.strip().lower()
-    if "." not in domain:
-        return domain
-    parts = domain.split(".")
-    for s in KNOWN_SUFFIXES:
-        if domain.endswith(s):
-            return domain
-    return ".".join(reversed(parts))
-
-
-def normalize(domain: str) -> str:
-    if pd.isna(domain):
-        return domain
-    domain = domain.strip().lower()
-    domain = re.sub(r"^https?://", "", domain)
-    return domain.split("/")[0]
-
 def load_labels():
     dfs = []
     for path in Path(LABEL_DIR).glob("*.csv"):
         df = pd.read_csv(path)
         df["source"] = path.stem
-        df["norm_domain"] = df["domain"].apply(normalize)
+        df["norm_domain"] = df["domain"].apply(normalize_domain)
         df = df.rename(columns={"label": WEAK_COL})
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
@@ -74,7 +55,7 @@ def load_labels():
 def load_regression_labels():
     df = pd.read_csv(REG_LABELS_PATH)
     df = df.rename(columns={"pc1": REG_COL})
-    df["norm_domain"] = df["domain"].apply(normalize)
+    df["norm_domain"] = df["domain"].apply(normalize_domain)
     return df[["norm_domain", REG_COL]]
 
 def inspect_errors(cls_df, k=20):
@@ -134,7 +115,7 @@ def stream_scores(label_set):
     for i in range(pf.num_row_groups):
         chunk = pf.read_row_group(i).to_pandas()
         seen += len(chunk)
-        chunk["norm_domain"] = chunk["domain"].apply(flip_if_needed).apply(normalize)
+        chunk["norm_domain"] = chunk["domain"].apply(flip_if_needed).apply(normalize_domain)
         hit = chunk[chunk["norm_domain"].isin(label_set)]
         matched += len(hit)
         if not hit.empty:
