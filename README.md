@@ -6,6 +6,15 @@
 <img src="img/credinet.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
 
 
+Client-side CrediNet Service: <br> using CrediPred scores in practice for fact-checking and online retrieval.
+
+</div>
+
+<br>
+
+
+## CrediBench Client
+
 Client-side CrediNet Service: using domain-level <br> credibility scores ([CrediPred](https://github.com/credi-net/CrediPred/blob/main/README.md))  in practice for fact-checking and web retrieval.
 
 </div>
@@ -14,9 +23,6 @@ Client-side CrediNet Service: using domain-level <br> credibility scores ([Credi
 <br>
 
 
-## CrediBench Client
-
-Python client for the CrediGraph API.
 
 ### Install
 
