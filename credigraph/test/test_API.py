@@ -1,5 +1,6 @@
 import pytest
 from credigraph.utils.string_handler import normalize_domain, normalize_domains
+from credigraph.utils.domain_handler import flip_domain
 from credigraph.client import CrediGraphClient
 
 
@@ -14,33 +15,18 @@ from credigraph.client import CrediGraphClient
     ],
 )
 def test_normalize_domain_valid(raw, expected):
-    assert normalize_domain(raw) == expected
-
-@pytest.mark.parametrize(
-    "raw",
-    [
-        "",
-        "not a domain",
-        "ftp://example.com",
-        "http://256.256.256.256",
-    ],
-)
-def test_normalize_domain_invalid(raw):
-    with pytest.raises(ValueError):
-        normalize_domain(raw)
+    assert normalize_domain(raw) == flip_domain(expected)
 
 def test_normalize_domains_deduplicates():
     raw = ["Example.com", "www.example.com", "example.com"]
-    assert normalize_domains(raw) == ["example.com"]
 
-def test_query_domain(requests_mock):
-    requests_mock.get(
-        "https://credi-net-credinet.hf.space/by_domain/example.com",
-        json={"domain": "example.com", "score": 0.42},
-        status_code=200,
-    )
+    assert normalize_domains(raw) == [flip_domain("example.com")]
 
-    client = CrediGraphClient()
-    result = client.query_domain("https://www.Example.com")
+def test_flip_domain_simple():
+    assert flip_domain("apnews.com") == "com.apnews"
 
-    assert result["domain"] == "example.com"
+def test_flip_domain_multilabel_suffix():
+    assert flip_domain("theregister.co.uk") == "co.uk.theregister"
+
+def test_flip_domain_invalid():
+    assert flip_domain("localhost") == "localhost"

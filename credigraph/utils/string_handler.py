@@ -3,9 +3,10 @@ import re
 import requests
 from typing import List, Iterable
 from urllib.parse import urlparse
+from credigraph.utils import flip_domain
 
 DOMAIN_REGEX = re.compile(
-    r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$"
+    r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$"
 )
 
 def normalize_domain(value: str) -> str:
@@ -25,6 +26,8 @@ def normalize_domain(value: str) -> str:
 
     if not DOMAIN_REGEX.match(host):
         raise ValueError(f"Invalid domain: {host}")
+    
+    host = flip_domain(host)
 
     return host
 

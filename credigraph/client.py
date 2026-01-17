@@ -1,7 +1,7 @@
 import os
 import requests
 from typing import List
-from credigraph.utils.string_handler import normalize_domain, normalize_domains
+from credigraph.utils import normalize_domain, normalize_domains
 
 DEFAULT_API_URL = "https://credi-net-credinet.hf.space"
 
