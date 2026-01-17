@@ -1,8 +1,9 @@
 import os
 import requests
 from typing import List
+from credigraph.utils import normalize_domain, normalize_domains
 
-DEFAULT_API_URL = "https://ekmpa-credibench-api.hf.space"
+DEFAULT_API_URL = "https://credi-net-credinet.hf.space"
 
 class CrediGraphClient:
     def __init__(self, api_url=None, token=None):
@@ -10,6 +11,7 @@ class CrediGraphClient:
         self.token = token or os.getenv("HF_TOKEN")
 
     def query_domain(self, domain: str):
+        domain = normalize_domain(domain)
         url = f"{self.api_url}/by_domain/{domain}"
         headers = {}
         if self.token:
@@ -22,5 +24,7 @@ class CrediGraphClient:
     def query(self, domains: List[str] | str):
         if isinstance(domains, str):
             return self.query_domain(domains)
+        
+        domains = normalize_domains(domains)
 
         return [self.query_domain(d) for d in domains]

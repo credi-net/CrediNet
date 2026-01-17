@@ -13,9 +13,16 @@ Client-side CrediNet Service: <br> using CrediPred scores in practice for fact-c
 <br>
 
 
-## CrediBench Client [currently: not live]
+## CrediBench Client
 
-Python client for the CrediGraph API.
+Client-side CrediNet Service: using domain-level <br> credibility scores ([CrediPred](https://github.com/credi-net/CrediPred/blob/main/README.md))  in practice for fact-checking and web retrieval.
+
+</div>
+
+---
+<br>
+
+
 
 ### Install
 

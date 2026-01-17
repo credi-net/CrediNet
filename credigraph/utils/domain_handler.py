@@ -2,7 +2,6 @@ import re
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 import pandas as pd 
-
 import tldextract
 
 _extract = tldextract.TLDExtract(include_psl_private_domains=True)
@@ -53,6 +52,13 @@ def flip_if_needed(domain: str) -> str:
         return domain
 
     labels = [p for p in domain.split('.') if p]
+    Strategy: try all cyclic rotations of labels; pick the parse with
+    the longest PSL suffix (# of labels), then longest domain label.
+    """
+    if not domain:
+        return domain
+
+    labels = [p for p in domain.strip('.').lower().split('.') if p]
     if not labels:
         return domain
 
@@ -160,3 +166,52 @@ def extract_domain(raw: str) -> str | None:
 
     except Exception:
         return None
+        
+def flip_domain(domain: str) -> str:
+    """
+    Transform a canonical 'domain.suffix' into the flipped form
+    'suffix.domain', e.g.:
+
+        'apnews.com'        -> 'com.apnews'
+        'theregister.co.uk' -> 'co.uk.theregister'
+
+    Requires the same `_extract` function used by `flip_if_needed`
+    (e.g. tldextract with the Public Suffix List).
+    """
+    if not domain:
+        return domain
+
+    domain = domain.strip('.').lower()
+    if not domain:
+        return domain
+
+    ext = _extract(domain)
+    if not ext.domain or not ext.suffix:
+        # If it can't be parsed canonically, return as-is
+        return domain
+
+    return f"{ext.suffix}.{ext.domain}"
+
+def lookup(domain: str, dqr_domains: Dict[str, List[float]]) -> Optional[List[float]]:
+    """Look up domain in dqr_domains, return associated data if found."""
+    domain_parts = domain.split('.')
+    for key, value in dqr_domains.items():
+        key_parts = key.split('.')
+        if (
+            len(key_parts) >= 2
+            and key_parts[0] in domain_parts
+            and key_parts[1] in domain_parts
+        ):
+            return value
+    return None
+
+
+def lookup_exact(
+    domain: str, dqr_domains: Dict[str, List[float]]
+) -> Optional[List[float]]:
+    domain_name = flip_if_needed(domain)
+    return dqr_domains.get(domain_name)
+
+
+def reverse_domain(domain: str) -> str:
+    return '.'.join(domain.split('.')[::-1])
