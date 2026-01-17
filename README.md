@@ -14,7 +14,7 @@ Client-side CrediNet Service: using domain-level <br> credibility scores ([Credi
 <br>
 
 
-## CrediBench Client [currently: not live]
+## CrediBench Client
 
 Python client for the CrediGraph API.
 
