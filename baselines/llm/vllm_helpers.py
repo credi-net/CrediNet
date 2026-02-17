@@ -1,8 +1,3 @@
-"""
-Helper functions to manage vLLM server instances for CrediNet experiments.
-Adapted from StabilityBench's vllm_helpers.py
-"""
-
 import socket
 import time
 import requests
