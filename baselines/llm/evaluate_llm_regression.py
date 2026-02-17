@@ -1,5 +1,6 @@
 """
-Query LLM for regression test set domains and evaluate results in real-time.
+Query LLM for test set domains and evaluate results in real-time.
+Supports both regression and classification modes.
 """
 
 import os
@@ -7,10 +8,12 @@ import sys
 import json
 import argparse
 from pathlib import Path
+from datetime import datetime
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
+from sklearn.metrics import accuracy_score, f1_score
 
 import api_factory
 import prompt_factory
@@ -19,10 +22,27 @@ from credigraph.utils.domain_handler import flip_if_needed
 
 def load_regression_test_set():
     """Load regression test set with ground truth labels."""
-    base_dir = Path(__file__).parent.parent
+    base_dir = Path(__file__).parent.parent.parent
     test_path = base_dir / 'data' / 'all_splits' / 'regression' / 'test_regression_domains.parquet'
     
     print(f"Loading regression test set from {test_path}")
+    df = pd.read_parquet(test_path)
+    
+    ground_truth = {}
+    for _, row in df.iterrows():
+        domain = flip_if_needed(row['domain'])
+        ground_truth[domain] = row['label']
+    
+    print(f"Loaded {len(ground_truth)} domains with ground truth labels")
+    return ground_truth
+
+
+def load_classification_test_set():
+    """Load classification balanced test set with ground truth labels."""
+    base_dir = Path(__file__).parent.parent.parent
+    test_path = base_dir / 'data' / 'all_splits' / 'binary' / 'balanced' / 'test_domains.parquet'
+    
+    print(f"Loading classification balanced test set from {test_path}")
     df = pd.read_parquet(test_path)
     
     ground_truth = {}
@@ -53,21 +73,25 @@ def parse_llm_response(response_text):
     return 0.5, True 
 
 
-def evaluate_predictions(predictions, ground_truth):
+def evaluate_predictions(predictions, ground_truth, mode='regression', threshold=0.5):
     """
     Compute evaluation metrics.
     
     Args:
         predictions: Dict mapping domain -> (rating, is_refusal)
         ground_truth: Dict mapping domain -> true_label
+        mode: 'regression' or 'classification'
+        threshold: Threshold for binary classification (default 0.5)
         
     Returns:
         Dict with evaluation metrics
     """
-    absolute_errors = []
     num_matched = 0
     num_refused = 0
     num_total = len(predictions)
+    
+    y_true = []
+    y_pred = []
     
     for domain, (pred_rating, is_refusal) in predictions.items():  
         if domain in ground_truth:
@@ -75,33 +99,61 @@ def evaluate_predictions(predictions, ground_truth):
             if pred_rating == -1:
                 num_refused += 1
                 pred_rating = 0.5  
-            ae = abs(pred_rating - true_rating)
-            absolute_errors.append(ae)
+            
+            y_true.append(true_rating)
+            y_pred.append(pred_rating)
             num_matched += 1
-    
-    if absolute_errors:
-        mae = np.mean(absolute_errors)
-        max_ae = np.max(absolute_errors)
-    else:
-        mae = None
-        max_ae = None
     
     refusal_rate = num_refused / num_total if num_total > 0 else 0
     
-    return {
-        'mae': mae,
-        'max_ae': max_ae,
+    metrics = {
         'num_total': num_total,
         'num_matched': num_matched,
         'num_refused': num_refused,
         'refusal_rate': refusal_rate,
         'coverage': num_matched / len(ground_truth) if ground_truth else 0
     }
+    
+    if not y_true:
+        metrics.update({'mae': None, 'max_ae': None, 'accuracy': None, 'f1': None})
+        return metrics
+    
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    
+    if mode == 'classification':
+        # Binary classification metrics
+        y_true_binary = (y_true >= threshold).astype(int)
+        y_pred_binary = (y_pred >= threshold).astype(int)
+        
+        accuracy = accuracy_score(y_true_binary, y_pred_binary)
+        f1 = f1_score(y_true_binary, y_pred_binary, average='binary', zero_division=0)
+        
+        metrics.update({
+            'accuracy': accuracy,
+            'f1': f1,
+            'mae': None,
+            'max_ae': None
+        })
+    else:
+        # Regression metrics
+        absolute_errors = np.abs(y_true - y_pred)
+        mae = np.mean(absolute_errors)
+        max_ae = np.max(absolute_errors)
+        
+        metrics.update({
+            'mae': mae,
+            'max_ae': max_ae,
+            'accuracy': None,
+            'f1': None
+        })
+    
+    return metrics
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Evaluate LLM on regression test set domains."
+        description="Evaluate LLM on test set domains (regression or classification)."
     )
     parser.add_argument("--provider", required=True, help="API provider ('openai' or 'vllm')")
     parser.add_argument("--model", required=True, help="Model name to query")
@@ -111,6 +163,19 @@ def main():
         action="store_true",
         default=False,
         help="Enable web search for OpenAI API"
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=['regression', 'classification'],
+        default='regression',
+        help="Evaluation mode: regression or classification"
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.5,
+        help="Threshold for binary classification (default 0.5)"
     )
     
     args = parser.parse_args()
@@ -128,7 +193,12 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    ground_truth = load_regression_test_set()
+    # Load appropriate test set based on mode
+    if args.mode == 'classification':
+        ground_truth = load_classification_test_set()
+    else:
+        ground_truth = load_regression_test_set()
+    
     domains_to_query = sorted(ground_truth.keys())
     
     existing = {
@@ -180,10 +250,10 @@ def main():
     
     print(f"[START] Evaluating predictions @ {datetime.now().isoformat()}")
     print("\n" + "="*80)
-    print("EVALUATION RESULTS")
+    print(f"EVALUATION RESULTS ({args.mode.upper()})")
     print("="*80)
     
-    metrics = evaluate_predictions(predictions, ground_truth)
+    metrics = evaluate_predictions(predictions, ground_truth, mode=args.mode, threshold=args.threshold)
     
     print(f"Total domains: {metrics['num_total']}")
     print(f"Matched with ground truth: {metrics['num_matched']}")
@@ -191,16 +261,25 @@ def main():
     print(f"Refusal rate: {metrics['refusal_rate']:.2%}")
     print(f"Coverage: {metrics['coverage']:.2%}")
     
-    if metrics['mae'] is not None:
-        print(f"\nMAE: {metrics['mae']:.4f}")
-        print(f"Max(AE): {metrics['max_ae']:.4f}")
+    if args.mode == 'classification':
+        if metrics['accuracy'] is not None:
+            print(f"\nAccuracy: {metrics['accuracy']:.4f}")
+            print(f"F1 Score: {metrics['f1']:.4f}")
+        else:
+            print("\nNo valid predictions to evaluate")
     else:
-        print("\nNo valid predictions to evaluate")
+        if metrics['mae'] is not None:
+            print(f"\nMAE: {metrics['mae']:.4f}")
+            print(f"Max(AE): {metrics['max_ae']:.4f}")
+        else:
+            print("\nNo valid predictions to evaluate")
     
     summary = {
         'model': args.model,
         'provider': args.provider,
         'web_search': args.web_search,
+        'mode': args.mode,
+        'threshold': args.threshold if args.mode == 'classification' else None,
         'metrics': metrics
     }
     
@@ -215,15 +294,23 @@ def main():
         f.write(f"Model: {args.model}\n")
         f.write(f"Provider: {args.provider}\n")
         f.write(f"Web Search: {args.web_search}\n")
+        f.write(f"Mode: {args.mode}\n")
+        if args.mode == 'classification':
+            f.write(f"Threshold: {args.threshold}\n")
         f.write("="*80 + "\n\n")
         f.write(f"Total domains: {metrics['num_total']}\n")
         f.write(f"Matched with ground truth: {metrics['num_matched']}\n")
         f.write(f"Refused/Invalid: {metrics['num_refused']}\n")
         f.write(f"Refusal rate: {metrics['refusal_rate']:.2%}\n")
         f.write(f"Coverage: {metrics['coverage']:.2%}\n")
-        if metrics['mae'] is not None:
-            f.write(f"\nMAE: {metrics['mae']:.4f}\n")
-            f.write(f"Max(AE): {metrics['max_ae']:.4f}\n")
+        if args.mode == 'classification':
+            if metrics['accuracy'] is not None:
+                f.write(f"\nAccuracy: {metrics['accuracy']:.4f}\n")
+                f.write(f"F1 Score: {metrics['f1']:.4f}\n")
+        else:
+            if metrics['mae'] is not None:
+                f.write(f"\nMAE: {metrics['mae']:.4f}\n")
+                f.write(f"Max(AE): {metrics['max_ae']:.4f}\n")
     
     print(f"[END] Results saved to {results_path}")
 
