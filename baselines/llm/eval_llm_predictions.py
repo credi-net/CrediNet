@@ -1,7 +1,3 @@
-"""
-LLM Eval (Regression and Classification).
-"""
-
 import argparse
 import json
 import os
@@ -187,7 +183,7 @@ def find_llm_directories(
                 continue
             
             if base_dir != eval_results_dir:
-                if llm_dir.name.startswith('gpt') or llm_dir.name.startswith('gemini'):
+                if llm_dir.name.startswith('gpt') or llm_dir.name.startswith('vllm'):
                     llm_name = f"llm-{llm_dir.name}"
                     llm_dirs.append((llm_name, llm_dir))
                 continue
