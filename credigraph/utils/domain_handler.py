@@ -52,15 +52,6 @@ def flip_if_needed(domain: str) -> str:
         return domain
 
     labels = [p for p in domain.split('.') if p]
-    Strategy: try all cyclic rotations of labels; pick the parse with
-    the longest PSL suffix (# of labels), then longest domain label.
-    """
-    if not domain:
-        return domain
-
-    labels = [p for p in domain.strip('.').lower().split('.') if p]
-    if not labels:
-        return domain
 
     best = None  # (suffix_label_count, domain_len, normalized_str)
 
@@ -192,26 +183,3 @@ def flip_domain(domain: str) -> str:
 
     return f"{ext.suffix}.{ext.domain}"
 
-def lookup(domain: str, dqr_domains: Dict[str, List[float]]) -> Optional[List[float]]:
-    """Look up domain in dqr_domains, return associated data if found."""
-    domain_parts = domain.split('.')
-    for key, value in dqr_domains.items():
-        key_parts = key.split('.')
-        if (
-            len(key_parts) >= 2
-            and key_parts[0] in domain_parts
-            and key_parts[1] in domain_parts
-        ):
-            return value
-    return None
-
-
-def lookup_exact(
-    domain: str, dqr_domains: Dict[str, List[float]]
-) -> Optional[List[float]]:
-    domain_name = flip_if_needed(domain)
-    return dqr_domains.get(domain_name)
-
-
-def reverse_domain(domain: str) -> str:
-    return '.'.join(domain.split('.')[::-1])

@@ -7,7 +7,7 @@ name = "credigraph"
 version = "0.1.4"
 description = "Python client for the CrediGraph API"
 authors = [{name = "Complex Data Lab"}]
-requires-python = ">=3.10"
+requires-python = "==3.10.*"
 dependencies = [
     "build>=1.4.0",
     "pytest>=9.0.2",
@@ -21,6 +21,16 @@ dependencies = [
     "requests",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
+    "vllm>=0.13.0",
+    "optuna>=4.6.0",
+    "pydantic>=2.12.5",
+    "datasets>=4.5.0",
+    "json-repair>=0.55.0",
+    "torch-geometric>=2.7.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "numpy>=2.2.6",
+    "google-genai>=1.60.0",
 ]
 
 [tool.setuptools.packages.find]
