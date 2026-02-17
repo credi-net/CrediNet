@@ -34,16 +34,46 @@ pip install credigraph
 
 ```python
 from credigraph import query
-print(query("apnews.com"))
-print(query(["apnews.com", "cnn.com"]))
+
+# Single domain
+result = query("apnews.com")
+print(result)
+
+# OR Multiple domains
+results = query(["apnews.com", "cnn.com", "reuters.com"])
+for result in results:
+    print(result)
 ```
 
-With auth: `export HF_TOKEN=hf_...` 
+<!-- Set token as environment variable:
+```bash
+export HF_TOKEN=hf_your_token_here
+```
 
-Or, 
+Or pass it directly:
 ```python
 from credigraph import CrediGraphClient
-c = CrediGraphClient(token="hf_...")
-c.query("reuters.com")
+
+client = CrediGraphClient(token="hf_your_token_here")
+result = client.query("reuters.com")
+print(result)
+``` -->
+
+**Input Formats:**
+
+The client normalizes various URL/domain formats automatically:
+```python
+# All of these work:
+query("example.com")
+query("www.example.com")
+query("https://example.com/article")
+query("EXAMPLE.COM")  # Case insensitive
+```
+
+**Check Version:**
+
+```python
+import credigraph
+print(credigraph.__version__)
 ```
 

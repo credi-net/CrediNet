@@ -51,13 +51,6 @@ def flip_if_needed(domain: str) -> str:
     if not domain:
         return domain
 
-    labels = [p for p in domain.split('.') if p]
-    Strategy: try all cyclic rotations of labels; pick the parse with
-    the longest PSL suffix (# of labels), then longest domain label.
-    """
-    if not domain:
-        return domain
-
     labels = [p for p in domain.strip('.').lower().split('.') if p]
     if not labels:
         return domain
