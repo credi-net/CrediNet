@@ -2,7 +2,6 @@ import os
 import requests
 from typing import Any, Dict, List
 from credigraph.utils import normalize_domain, normalize_domains
-from credigraph import __version__
 
 DEFAULT_API_URL = "https://credi-net-credinet.hf.space"
 
@@ -29,7 +28,11 @@ class CrediGraphClient:
         self.token = token or os.getenv("HF_TOKEN")
         self.timeout = timeout
         
-        version = __version__
+        try:
+            from . import __version__
+            version = __version__
+        except ImportError:
+            version = "unknown"
         self._user_agent = f"credigraph/{version}"
 
     def _get_headers(self) -> Dict[str, str]:
