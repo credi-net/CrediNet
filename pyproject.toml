@@ -14,6 +14,7 @@ dependencies = [
     "pandas>=2.0.0",
     "docker>=7.1.0",
     "schemathesis>=4.10.2",
+    "bump2version>=1.0.1",
 ]
 
 [project.optional-dependencies]
