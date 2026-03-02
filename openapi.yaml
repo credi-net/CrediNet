@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: CrediGraph API
+  description: Public API for domain credibility scoring. No authentication required.
+  version: "0.1.5"
+  contact:
+    name: Complex Data Lab
+  license:
+    name: MIT
+
+servers:
+  - url: https://credi-net-credinet.hf.space
+    description: Production server
+  - url: http://localhost:7860
+    description: Local development server
+
+paths:
+  /by_domain/{domain}:
+    get:
+      operationId: queryDomain
+      summary: Query credibility scores for a single domain
+      description: |
+        Returns credibility metrics and metadata for the specified domain.
+        
+        **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
+        
+        **Public API:** No authentication required.
+      tags:
+        - Queries
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          description: |
+            Domain to query (normalized form).
+            Examples: `com.apnews`, `co.uk.theregister`
+          schema:
+            type: string
+            minLength: 3
+            pattern: '^[a-z0-9.-]+$'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResult'
+        '400':
+          description: Bad request (invalid domain format)
+        '404':
+          description: Domain not found in database
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Server error
+
+  /health:
+    get:
+      operationId: health
+      summary: Health check endpoint
+      description: Returns API availability status. Public endpoint, no authentication required.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                    example: "ok"
+                  rows:
+                    type: integer
+                    description: "Number of domains in database"
+                    example: 45030252
+
+components:
+  schemas:
+    DomainResult:
+      type: object
+      required:
+        - domain
+        - continuous_score
+      properties:
+        domain:
+          type: string
+          description: The queried domain (flipped format)
+          example: "com.apnews"
+        continuous_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: |
+            Continuous credibility score (0-1).
+            Based on primary classification model (pc1).
+            Note: A binary_score will be added in future versions.
+          example: 0.697
+        source_reliability:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Additional source reliability metric
+          nullable: true
+        predicted_class:
+          type: string
+          enum: [credible, misinformation, neutral]
+          description: Predicted credibility class
+          nullable: true
+        metadata:
+          type: object
+          description: Additional metadata about the domain
+          properties:
+            last_checked:
+              type: string
+              format: date-time
+            model_version:
+              type: string
+              example: "1.2.0"
+
+tags:
+  - name: Queries
+    description: Domain credibility queries
+  - name: System
+    description: Server status endpoints
+
+x-versioning:
+  currentVersion: "0.1.5"
+  deprecationPolicy: |
+    API versions are deprecated 6 months after a new version is released.
+    Clients should monitor response headers for deprecation warnings.
+  clientVersionTracking: |
+    Server tracks client versions via User-Agent header.
+    Clients should always include: User-Agent: credigraph/X.Y.Z
+  plannedChanges: |
+    - Version 0.2.0: Add binary_score field (separate from continuous_score)
+    - Version 0.2.0: Add confidence interval to continuous_score

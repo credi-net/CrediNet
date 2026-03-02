@@ -1,79 +1,104 @@
 <div align="center">
 
-
 # CrediNet
 
 <img src="img/credinet.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
 
-
-Client-side CrediNet Service: <br> using CrediPred scores in practice for fact-checking and online retrieval.
-
-</div>
-
-<br>
-
-
-## CrediBench Client
-
-Client-side CrediNet Service: using domain-level <br> credibility scores ([CrediPred](https://github.com/credi-net/CrediPred/blob/main/README.md))  in practice for fact-checking and web retrieval.
+Domain credibility scoring client for fact-checking and online retrieval.
 
 </div>
 
 ---
-<br>
 
-
-
-### Install
+## Install
 
 ```bash
 pip install credigraph
 ```
 
-### Usage
+## Quick Start
 
 ```python
 from credigraph import query
 
 # Single domain
 result = query("apnews.com")
-print(result)
+print(result["continuous_score"])
 
-# OR Multiple domains
+# Multiple domains
 results = query(["apnews.com", "cnn.com", "reuters.com"])
 for result in results:
-    print(result)
+    print(result["domain"], result["continuous_score"])
 ```
 
-<!-- Set token as environment variable:
+### Automatic Normalization
+
+The client handles various URL/domain formats:
+```python
+query("example.com")
+query("www.example.com")
+query("https://example.com/article?x=1")
+query("EXAMPLE.COM")  # case-insensitive
+```
+
+### Response Format
+
+```json
+{
+    "domain": "com.apnews",
+    "continuous_score": 0.7
+}
+```
+
+## Configuration
+
+### Token (Optional)
+
+The public API works without authentication. Set a token only if your deployment requires it:
+
 ```bash
 export HF_TOKEN=hf_your_token_here
 ```
 
-Or pass it directly:
+### Custom API Endpoint
+
 ```python
 from credigraph import CrediGraphClient
 
-client = CrediGraphClient(token="hf_your_token_here")
-result = client.query("reuters.com")
-print(result)
-``` -->
-
-**Input Formats:**
-
-The client normalizes various URL/domain formats automatically:
-```python
-# All of these work:
-query("example.com")
-query("www.example.com")
-query("https://example.com/article")
-query("EXAMPLE.COM")  # Case insensitive
+client = CrediGraphClient(
+    api_url="http://localhost:7860",  # Dev server
+    timeout=30
+)
+result = client.query("example.com")
 ```
 
-**Check Version:**
+### Environment Variables
+
+```bash
+export CREDI_API_URL=https://custom-api.example.com
+```
+
+```python
+from credigraph import CrediGraphClient
+
+client = CrediGraphClient()  # Reads CREDI_API_URL and HF_TOKEN automatically
+```
+
+## Versioning
+
+This package follows [semantic versioning](https://semver.org/):
 
 ```python
 import credigraph
-print(credigraph.__version__)
+print(credigraph.__version__)  # e.g., "0.1.5"
 ```
 
+## API Contract
+
+- OpenAPI spec: [openapi.yaml](openapi.yaml)
+- Developing guide (versioning, testing): [credigraph/README.md](credigraph/README.md)
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
+- **Documentation**: this README (client usage) + [credigraph/README.md](credigraph/README.md) (developer workflow)
