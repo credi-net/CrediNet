@@ -2,7 +2,7 @@
 
 from .client import CrediGraphClient
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "Complex Data Lab"
 
 __all__ = ["CrediGraphClient", "query", "__version__"]
