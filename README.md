@@ -74,7 +74,7 @@ server-side dataset uses a different storage convention.
 from credigraph import summarize
 
 meta = summarize()
-print(meta["api_version"])       # e.g. 0.2.0
+print(meta["api_version"])       # e.g. 0.2.1
 print(meta["data_cutoff_month"]) # 2024-12
 print(meta["method"])            # GAT-TEXT
 print(meta["score_sources"]["regression"])
@@ -149,7 +149,7 @@ This package follows [semantic versioning](https://semver.org/):
 
 ```python
 import credigraph
-print(credigraph.__version__)  # e.g., "0.2.0"
+print(credigraph.__version__)  # e.g., "0.2.1"
 ```
 
 ## API Contract

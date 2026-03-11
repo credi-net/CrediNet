@@ -101,6 +101,7 @@ def test_client_query_domain_falls_back_to_flipped_form(monkeypatch):
     assert result["domain"] == "com.apnews"
     assert result["continuous_score"] == 0.46
     assert result["binary_score"] == 0.0
+    assert "pc1_score" not in result
 
 
 def test_client_label_sets(monkeypatch):
@@ -155,7 +156,7 @@ def test_client_help(monkeypatch):
         if url.endswith("/metadata"):
             return FakeResponse(
                 {
-                    "api_version": "0.2.0",
+                    "api_version": "0.2.1",
                     "data_cutoff_month": "2024-12",
                     "method": "GAT-TEXT",
                     "score_sources": {"regression": "x", "binary": "y"},
@@ -181,6 +182,80 @@ def test_client_help(monkeypatch):
     result = client.help()
 
     assert result["source"] == "openapi"
-    assert result["api_version"] == "0.2.0"
+    assert result["api_version"] == "0.2.1"
     assert result["endpoints"][0]["path"] == "/by_domain/{domain}"
     assert result["endpoints"][0]["method"] == "GET"
+
+
+def test_client_query_precision_custom(monkeypatch):
+    client = CrediGraphClient(api_url="https://example.test")
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                response = requests.Response()
+                response.status_code = self.status_code
+                raise requests.exceptions.HTTPError(response=response)
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):
+        return FakeResponse(
+            200,
+            {
+                "domain": "bbc.com",
+                "continuous_score": 0.43,
+                "pc1_score": 0.4258555471897125,
+                "binary_score": 0.0,
+            },
+        )
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    result = client.query_domain("bbc.com", precision=4)
+
+    assert result["continuous_score"] == 0.43
+    assert result["binary_score"] == 0.0
+    assert "pc1_score" not in result
+
+
+def test_client_query_raw_uses_unrounded_score(monkeypatch):
+    client = CrediGraphClient(api_url="https://example.test")
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                response = requests.Response()
+                response.status_code = self.status_code
+                raise requests.exceptions.HTTPError(response=response)
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):
+        return FakeResponse(
+            200,
+            {
+                "domain": "bbc.com",
+                "continuous_score": 0.43,
+                "pc1_score": 0.4258555471897125,
+                "binary_score": 0.0,
+            },
+        )
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    result = client.query_domain("bbc.com", raw=True)
+
+    assert result["continuous_score"] == 0.4258555471897125
+    assert result["binary_score"] == 0.0
+    assert "pc1_score" not in result

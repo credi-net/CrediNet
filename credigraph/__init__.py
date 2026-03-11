@@ -2,7 +2,7 @@
 
 from .client import CrediGraphClient
 
-__version__ = "0.3.0"
+__version__ = "0.2.1"
 __author__ = "Complex Data Lab"
 
 __all__ = [
@@ -24,6 +24,8 @@ def query(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
+    raw: bool = False,
+    precision: int | None = 2,
     **kwargs
 ):
     """
@@ -32,7 +34,7 @@ def query(
     Args:
         domain: Single domain or list of domains to query
         api_url: Optional custom API endpoint
-        token: Optional HF token (or use HF_TOKEN environment variable)
+        token: HF token (or use HF_TOKEN environment variable)
         timeout: Request timeout in seconds (default: 10)
         **kwargs: Additional args passed to CrediGraphClient
         
@@ -45,7 +47,7 @@ def query(
         timeout=timeout,
         **kwargs
     )
-    return client.query(domain)
+    return client.query(domain, raw=raw, precision=precision)
 
 
 def health(
@@ -177,6 +179,8 @@ def help(
     lines.append("  credigraph.metadata()  # {'api_version', 'data_cutoff_month', 'method', 'score_sources'}")
     lines.append("  credigraph.query('apnews.com')  # one domain result with scores")
     lines.append("  credigraph.query(['apnews.com', 'cnn.com'])  # list of domain results")
+    lines.append("  credigraph.query('bbc.com', precision=4)  # higher precision scores")
+    lines.append("  credigraph.query('bbc.com', raw=True)  # unrounded score fields")
     lines.append("  credigraph.stats()  # monthly graph stats incl. overlap fields")
     lines.append("  credigraph.months()  # monthly downloadable dataset catalog")
     lines.append("  credigraph.label_sets()  # available label-set metadata")

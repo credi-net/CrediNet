@@ -119,7 +119,12 @@ class CrediGraphClient:
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
 
-    def query_domain(self, domain: str) -> Dict[str, Any]:
+    def query_domain(
+        self,
+        domain: str,
+        raw: bool = False,
+        precision: int | None = 2,
+    ) -> Dict[str, Any]:
         """
         Query a single domain.
         
@@ -146,10 +151,16 @@ class CrediGraphClient:
                 result = r.json()
 
                 if "pc1_score" in result and "continuous_score" not in result:
-                    result["continuous_score"] = result.pop("pc1_score")
-                
+                    result["continuous_score"] = result["pc1_score"]
+
+                if raw and "pc1_score" in result and isinstance(result["pc1_score"], (int, float)):
+                    result["continuous_score"] = float(result["pc1_score"])
+
+                effective_precision = None if raw else precision
+
                 if "continuous_score" in result and isinstance(result["continuous_score"], (int, float)):
-                    result["continuous_score"] = float(f"{result['continuous_score']:.2f}")
+                    value = float(result["continuous_score"])
+                    result["continuous_score"] = round(value, effective_precision) if effective_precision is not None else value
 
                 if "binary_score" not in result:
                     legacy_binary_keys = (
@@ -166,7 +177,11 @@ class CrediGraphClient:
                     result["binary_score"] = int(result["binary_score"])
 
                 if "binary_score" in result and isinstance(result["binary_score"], (int, float)):
-                    result["binary_score"] = float(f"{result['binary_score']:.2f}")
+                    value = float(result["binary_score"])
+                    result["binary_score"] = round(value, effective_precision) if effective_precision is not None else value
+
+                # Hide legacy field from client output to keep a stable public payload.
+                result.pop("pc1_score", None)
                 
                 return result
             except requests.exceptions.Timeout:
@@ -279,7 +294,12 @@ class CrediGraphClient:
         payload["source"] = "fallback"
         return payload
 
-    def query(self, domains: List[str] | str) -> Dict[str, Any] | List[Dict[str, Any]]:
+    def query(
+        self,
+        domains: List[str] | str,
+        raw: bool = False,
+        precision: int | None = 2,
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """
         Query one or more domains.
         
@@ -290,7 +310,7 @@ class CrediGraphClient:
             Single result dict (if input was string) or list of result dicts
         """
         if isinstance(domains, str):
-            return self.query_domain(domains)
+            return self.query_domain(domains, raw=raw, precision=precision)
         
         domains = normalize_domains(domains)
-        return [self.query_domain(d) for d in domains]
+        return [self.query_domain(d, raw=raw, precision=precision) for d in domains]

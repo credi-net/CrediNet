@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: CrediGraph API
   description: Public API for domain credibility scoring. No authentication required.
-  version: "0.3.0"
+  version: "0.2.1"
   contact:
     name: Complex Data Lab
   license:
@@ -120,7 +120,7 @@ paths:
                     example: "ok"
                   api_version:
                     type: string
-                    example: "0.2.0"
+                    example: "0.2.1"
 
   /metadata:
     get:
@@ -198,7 +198,7 @@ components:
       properties:
         api_version:
           type: string
-          example: "0.2.0"
+          example: "0.2.1"
         data_cutoff_month:
           type: string
           description: "Month of data cutoff in YYYY-MM format."
@@ -432,7 +432,7 @@ tags:
     description: Server status endpoints
 
 x-versioning:
-  currentVersion: "0.2.0"
+  currentVersion: "0.2.1"
   deprecationPolicy: |
     API versions are deprecated 6 months after a new version is released.
     Clients should monitor response headers for deprecation warnings.
