@@ -1,6 +1,7 @@
 #Pycharm
 .idea/
 
+logs/
 
 #Gitignore common:
 # Byte-compiled / optimized / DLL files
