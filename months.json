@@ -1,0 +1,32 @@
+{
+  "months": [
+    {
+      "month": "2024-12",
+      "label": "December 2024 scores",
+      "download_url": "https://huggingface.co/datasets/credi-net/CrediPred/tree/main/MLP-Inference/Text%2BGAT",
+      "size_bytes": null,
+      "format": "parquet",
+      "description": "Binary and continuous scores for December 2024 (CC-MAIN-2024-46).",
+      "nodes": 0,
+      "edges": 0,
+      "overlap_with_previous_month": {
+        "previous_month": null,
+        "shared_nodes": 0,
+        "shared_edges": 0
+      },
+      "overlap_with_domainrel": {
+        "shared_nodes": 0,
+        "domainrel_nodes": 0
+      },
+      "regression_score_stats": {
+        "mean": null,
+        "quartiles": {
+          "q1": null,
+          "q2": null,
+          "q3": null
+        }
+      },
+      "regression_binary_disagreement_count": 0
+    }
+  ]
+}

@@ -15,7 +15,7 @@ source .venv/bin/activate
 
 - End-user docs live in [../README.md](../README.md)
 - API contract lives in [../openapi.yaml](../openapi.yaml)
-- Versioning and testing workflow lives in [../OPENAPI_GUIDE.md](../OPENAPI_GUIDE.md)
+- Versioning and testing workflow is documented in this guide and [../openapi.yaml](../openapi.yaml)
 
 ## Dev Checks
 
@@ -64,14 +64,16 @@ twine upload dist/*
 ## API Field Naming Convention
 
 - Canonical score field is `continuous_score`
-- Planned next field: `binary_score`
+- Canonical binary field is `binary_score`
+- API metadata endpoint: `GET /metadata`
+- Label-set metadata endpoint: `GET /label_sets`
 
 ```yaml
 binary_score:
-  type: integer
-  enum: [0, 1]
-  description: Binary credibility label (0=misinformation, 1=credible)
-  example: 1
+  type: number
+  minimum: 0
+  maximum: 1
+  description: Binary credibility score in {0,1}
 ```
 
 When introducing new response fields, update in this order:

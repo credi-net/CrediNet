@@ -1,7 +1,6 @@
 import re
-from typing import Dict, List, Optional, Iterable
+from typing import List, Iterable
 from urllib.parse import urlparse
-import pandas as pd 
 import tldextract
 
 _extract = tldextract.TLDExtract(include_psl_private_domains=True)
@@ -36,7 +35,26 @@ def flip_domain(domain: str) -> str:
     return f"{ext.suffix}.{ext.domain}"
 
 
-def normalize_domain(value: str) -> str:
+def unflip_domain(domain: str) -> str:
+    """Transform a flipped domain like 'com.apnews' back to 'apnews.com' when possible."""
+    if not domain:
+        return domain
+
+    labels = domain.strip('.').lower().split('.')
+    if len(labels) < 2:
+        return domain
+
+    for split_index in range(len(labels) - 1, 0, -1):
+        suffix = ".".join(labels[:split_index])
+        candidate = ".".join(labels[split_index:] + labels[:split_index])
+        extracted = _extract(candidate)
+        if extracted.suffix == suffix:
+            return candidate
+
+    return domain
+
+
+def canonicalize_domain(value: str) -> str:
     if not value or not isinstance(value, str):
         raise ValueError("Domain must be a non-empty string")
 
@@ -53,10 +71,27 @@ def normalize_domain(value: str) -> str:
 
     if not DOMAIN_REGEX.match(host):
         raise ValueError(f"Invalid domain: {host}")
-    
-    host = flip_domain(host)
 
     return host
+
+
+def normalize_domain(value: str) -> str:
+    """Normalize a domain input into the canonical host form."""
+    return canonicalize_domain(value)
+
+
+def normalize_domain_variants(value: str) -> List[str]:
+    """Return canonical and flipped variants for APIs that may use either convention."""
+    normalized = canonicalize_domain(value)
+    canonical = unflip_domain(normalized)
+    flipped = flip_domain(canonical)
+
+    variants = []
+    for candidate in (normalized, canonical, flipped):
+        if candidate and candidate not in variants:
+            variants.append(candidate)
+
+    return variants
 
 def normalize_domains(domains: Iterable[str]) -> List[str]:
     seen = set()

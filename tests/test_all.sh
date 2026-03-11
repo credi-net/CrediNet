@@ -75,12 +75,5 @@ else
     echo "   Then run: schemathesis run ../openapi.yaml --url=https://credi-net-credinet.hf.space"
 fi
 
-# Final summary
 print_header "Test suite complete"
 print_success "All tests passed"
-echo ""
-echo "Next steps:"
-echo "  - Before release: tests/test_all.sh"
-echo "  - When API changes: schemathesis run ../openapi.yaml --url=https://credi-net-credinet.hf.space"
-echo "  - When client changes: python tests/test_api.py"
-echo ""

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: CrediGraph API
   description: Public API for domain credibility scoring. No authentication required.
-  version: "0.1.6"
+  version: "0.2.0"
   contact:
     name: Complex Data Lab
   license:
@@ -19,25 +19,18 @@ paths:
     get:
       operationId: queryDomain
       summary: Query credibility scores for a single domain
-      description: |
-        Returns credibility metrics and metadata for the specified domain.
-        
-        **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
-        
-        **Public API:** No authentication required.
+      description: Returns credibility metrics for one or multiple domains.
       tags:
         - Queries
       parameters:
         - name: domain
           in: path
           required: true
-          description: |
-            Domain to query (normalized form).
-            Examples: `com.apnews`, `co.uk.theregister`
+          description: Domain to query.
           schema:
             type: string
             minLength: 3
-            pattern: '^[a-z0-9.-]+$'
+            pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
       responses:
         '200':
           description: Successful query
@@ -54,11 +47,61 @@ paths:
         '500':
           description: Server error
 
+  /stats:
+    get:
+      operationId: stats
+      summary: Monthly graph composition statistics
+      description: |
+        Returns precomputed graph-scale statistics for each monthly dataset.
+        These values should be computed offline rather than scanning the graphs at request time.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Monthly graph statistics payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyStatsResponse'
+
+  /months:
+    get:
+      operationId: months
+      summary: Available monthly datasets and download locations
+      description: |
+        Returns the list of monthly datasets available for direct download,
+        including metadata and URLs that clients can fetch without proxying
+        the graph contents through the API server.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Monthly dataset catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthsResponse'
+
+  /label_sets:
+    get:
+      operationId: labelSets
+      summary: Available label-set metadata
+      description: Returns metadata for the label sets exposed by the API.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Label-set metadata payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelSetsResponse'
+
   /health:
     get:
       operationId: health
       summary: Health check endpoint
-      description: Returns API availability status. Public endpoint, no authentication required.
+      description: Returns API availability status.
       tags:
         - System
       responses:
@@ -75,10 +118,24 @@ paths:
                     type: string
                     enum: [ok, degraded]
                     example: "ok"
-                  rows:
-                    type: integer
-                    description: "Number of domains in database"
-                    example: 45030252
+                  api_version:
+                    type: string
+                    example: "0.2.0"
+
+  /metadata:
+    get:
+      operationId: metadata
+      summary: API metadata and model provenance
+      description: Returns API version, scoring method, data cutoff month, and score source locations.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Metadata payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMetadata'
 
 components:
   schemas:
@@ -87,10 +144,11 @@ components:
       required:
         - domain
         - continuous_score
+        - binary_score
       properties:
         domain:
           type: string
-          description: The queried domain (flipped format)
+          description: The matched domain identifier returned by the API.
           example: "com.apnews"
         continuous_score:
           type: number
@@ -99,8 +157,15 @@ components:
           description: |
             Continuous credibility score (0-1).
             Based on primary classification model (pc1).
-            Note: A binary_score will be added in future versions.
           example: 0.697
+        binary_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: |
+            Binary credibility score (0-1).
+            Uses the binary Text+GAT model output.
+          example: 0.91
         source_reliability:
           type: number
           minimum: 0
@@ -123,6 +188,243 @@ components:
               type: string
               example: "1.2.0"
 
+    ApiMetadata:
+      type: object
+      required:
+        - api_version
+        - data_cutoff_month
+        - method
+        - score_sources
+      properties:
+        api_version:
+          type: string
+          example: "0.2.0"
+        data_cutoff_month:
+          type: string
+          description: "Month of data cutoff in YYYY-MM format."
+          example: "2024-12"
+        method:
+          type: string
+          example: "GAT-TEXT"
+        score_sources:
+          type: object
+          required:
+            - regression
+            - binary
+          properties:
+            regression:
+              type: string
+              format: uri
+              example: "https://huggingface.co/datasets/credi-net/CrediPred/blob/main/MLP-Inference/Text%2BGAT/mlpInfer_reg_dec2024_embeddinggemma-300m_GAT-text_scores.parquet.parquet"
+            binary:
+              type: string
+              format: uri
+              example: "https://huggingface.co/datasets/credi-net/CrediPred/blob/main/MLP-Inference/Text%2BGAT/mlpInfer_binaryClassifcation_dec2024_embeddinggemma-300m_GAT-text_scores.parquet"
+
+    MonthlyOverlap:
+      type: object
+      required:
+        - previous_month
+        - shared_nodes
+        - shared_edges
+      properties:
+        previous_month:
+          type: string
+          nullable: true
+          description: Previous month in YYYY-MM format, or null for the first month.
+          example: "2024-11"
+        shared_nodes:
+          type: integer
+          minimum: 0
+          description: Number of nodes present in both this month and the previous month.
+        shared_edges:
+          type: integer
+          minimum: 0
+          description: Number of edges present in both this month and the previous month.
+
+    MonthlyDatasetStats:
+      type: object
+      required:
+        - month
+        - nodes
+        - edges
+        - overlap_with_previous_month
+      properties:
+        month:
+          type: string
+          description: Dataset month in YYYY-MM format.
+          example: "2024-12"
+        nodes:
+          type: integer
+          minimum: 0
+          description: Total number of nodes in the monthly graph.
+          example: 145030252
+        edges:
+          type: integer
+          minimum: 0
+          description: Total number of edges in the monthly graph.
+          example: 9812456721
+        overlap_with_previous_month:
+          $ref: '#/components/schemas/MonthlyOverlap'
+        overlap_with_domainrel:
+          type: object
+          nullable: true
+          properties:
+            shared_nodes:
+              type: integer
+              minimum: 0
+              nullable: true
+              description: Number of month graph nodes also present in DomainRel.
+            domainrel_nodes:
+              type: integer
+              minimum: 0
+              nullable: true
+              description: Total number of unique nodes in DomainRel.
+        regression_score_stats:
+          type: object
+          nullable: true
+          properties:
+            mean:
+              type: number
+              nullable: true
+              description: Mean of the monthly regression score distribution.
+            quartiles:
+              type: object
+              nullable: true
+              properties:
+                q1:
+                  type: number
+                  nullable: true
+                q2:
+                  type: number
+                  nullable: true
+                q3:
+                  type: number
+                  nullable: true
+        regression_binary_disagreement_count:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: |
+            Count of joined domain instances where binary and regression disagree,
+            i.e. binary=1 and reg<reg_mean, or binary=0 and reg>reg_mean
+            (binary is thresholded at 0.5).
+
+    MonthlyStatsResponse:
+      type: object
+      required:
+        - months
+      properties:
+        months:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyDatasetStats'
+
+    MonthDownload:
+      type: object
+      required:
+        - month
+        - label
+        - download_url
+      properties:
+        month:
+          type: string
+          description: Dataset month in YYYY-MM format.
+          example: "2024-12"
+        label:
+          type: string
+          description: Human-readable dataset label.
+          example: "December 2024 graph"
+        download_url:
+          type: string
+          format: uri
+          description: Direct or canonical URL for downloading the dataset artifact.
+          example: "https://huggingface.co/datasets/credi-net/CrediGraph/resolve/main/graphs/2024-12/graph.parquet"
+        size_bytes:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Dataset artifact size in bytes when known.
+          example: 42000000000
+        format:
+          type: string
+          nullable: true
+          description: Dataset serialization format.
+          example: "parquet"
+        description:
+          type: string
+          nullable: true
+          description: Additional context about the downloadable artifact.
+
+    MonthsResponse:
+      type: object
+      required:
+        - months
+      properties:
+        months:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthDownload'
+
+    LabelSetSplit:
+      type: object
+      required:
+        - name
+        - path
+      properties:
+        name:
+          type: string
+          example: "train"
+        path:
+          type: string
+          example: "regression/train_regression_domains.parquet"
+
+    LabelSetInfo:
+      type: object
+      required:
+        - name
+        - task
+        - label_field
+      properties:
+        name:
+          type: string
+          example: "DomainRel"
+        task:
+          type: string
+          example: "regression"
+        label_field:
+          type: string
+          example: "pc1"
+        description:
+          type: string
+          nullable: true
+        source_url:
+          type: string
+          format: uri
+          nullable: true
+        format:
+          type: string
+          nullable: true
+          example: "parquet"
+        splits:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelSetSplit'
+        domain_count:
+          type: integer
+          nullable: true
+          minimum: 0
+
+    LabelSetsResponse:
+      type: object
+      required:
+        - label_sets
+      properties:
+        label_sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelSetInfo'
+
 tags:
   - name: Queries
     description: Domain credibility queries
@@ -130,13 +432,10 @@ tags:
     description: Server status endpoints
 
 x-versioning:
-  currentVersion: "0.1.5"
+  currentVersion: "0.2.0"
   deprecationPolicy: |
     API versions are deprecated 6 months after a new version is released.
     Clients should monitor response headers for deprecation warnings.
   clientVersionTracking: |
     Server tracks client versions via User-Agent header.
     Clients should always include: User-Agent: credigraph/X.Y.Z
-  plannedChanges: |
-    - Version 0.2.0: Add binary_score field (separate from continuous_score)
-    - Version 0.2.0: Add confidence interval to continuous_score

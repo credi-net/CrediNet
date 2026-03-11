@@ -1,0 +1,13 @@
+{
+  "label_sets": [
+    {
+      "name": "DomainRel",
+      "task": "binary",
+      "label_field": "label",
+      "description": "Binary label set of web domains' credibility.",
+      "source_url": "https://huggingface.co/datasets/credi-net/DomainRel",
+      "format": "parquet",
+      "domain_count": null
+    }
+  ]
+}
