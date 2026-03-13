@@ -2,7 +2,7 @@
 
 from .client import CrediGraphClient
 
-__version__ = "0.2.2"
+__version__ = "0.3.1"
 __author__ = "Complex Data Lab"
 
 __all__ = [
@@ -25,7 +25,6 @@ def query(
     token: str | None = None,
     timeout: int = 10,
     raw: bool = False,
-    precision: int | None = 2,
     **kwargs
 ):
     """
@@ -47,7 +46,7 @@ def query(
         timeout=timeout,
         **kwargs
     )
-    return client.query(domain, raw=raw, precision=precision)
+    return client.query(domain, raw=raw)
 
 
 def health(
@@ -95,6 +94,7 @@ def summarize(
 def stats(
     api_url: str | None = None,
     token: str | None = None,
+    internal_token: str | None = None,
     timeout: int = 10,
     **kwargs
 ):
@@ -102,6 +102,7 @@ def stats(
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
+        internal_token=internal_token,
         timeout=timeout,
         **kwargs
     )
@@ -111,6 +112,7 @@ def stats(
 def months(
     api_url: str | None = None,
     token: str | None = None,
+    internal_token: str | None = None,
     timeout: int = 10,
     **kwargs
 ):
@@ -118,6 +120,7 @@ def months(
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
+        internal_token=internal_token,
         timeout=timeout,
         **kwargs
     )
@@ -127,6 +130,7 @@ def months(
 def label_sets(
     api_url: str | None = None,
     token: str | None = None,
+    internal_token: str | None = None,
     timeout: int = 10,
     **kwargs
 ):
@@ -134,6 +138,7 @@ def label_sets(
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
+        internal_token=internal_token,
         timeout=timeout,
         **kwargs
     )
@@ -177,13 +182,8 @@ def help(
     lines.append("  credigraph.help(raw=True)  # raw machine-readable guide dict")
     lines.append("  credigraph.health()  # {'status', 'api_version'}")
     lines.append("  credigraph.metadata()  # {'api_version', 'data_cutoff_month', 'method', 'score_sources'}")
-    lines.append("  credigraph.query('apnews.com')  # one domain result with scores")
-    lines.append("  credigraph.query(['apnews.com', 'cnn.com'])  # list of domain results")
-    lines.append("  credigraph.query('bbc.com', precision=4)  # higher precision scores")
-    lines.append("  credigraph.query('bbc.com', raw=True)  # unrounded score fields")
-    lines.append("  credigraph.stats()  # monthly graph stats incl. overlap fields")
-    lines.append("  credigraph.months()  # monthly downloadable dataset catalog")
-    lines.append("  credigraph.label_sets()  # available label-set metadata")
+    lines.append("  credigraph.query('apnews.com', raw=False)  # optional raw output for full float result")
+    lines.append("  credigraph.query(['apnews.com', 'cnn.com'], raw=False)  # optional raw output for full float result")
     lines.append("")
     lines.append(f"Source: {payload.get('source', 'unknown')}")
 

@@ -47,56 +47,6 @@ paths:
         '500':
           description: Server error
 
-  /stats:
-    get:
-      operationId: stats
-      summary: Monthly graph composition statistics
-      description: |
-        Returns precomputed graph-scale statistics for each monthly dataset.
-        These values should be computed offline rather than scanning the graphs at request time.
-      tags:
-        - System
-      responses:
-        '200':
-          description: Monthly graph statistics payload
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MonthlyStatsResponse'
-
-  /months:
-    get:
-      operationId: months
-      summary: Available monthly datasets and download locations
-      description: |
-        Returns the list of monthly datasets available for direct download,
-        including metadata and URLs that clients can fetch without proxying
-        the graph contents through the API server.
-      tags:
-        - System
-      responses:
-        '200':
-          description: Monthly dataset catalog
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MonthsResponse'
-
-  /label_sets:
-    get:
-      operationId: labelSets
-      summary: Available label-set metadata
-      description: Returns metadata for the label sets exposed by the API.
-      tags:
-        - System
-      responses:
-        '200':
-          description: Label-set metadata payload
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LabelSetsResponse'
-
   /health:
     get:
       operationId: health

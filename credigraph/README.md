@@ -69,6 +69,11 @@ twine upload dist/*
 - Label-set metadata endpoint: `GET /label_sets`
 
 ```yaml
+continuous_score:
+  type: number
+  minimum: 0
+  maximum: 1
+  description: Continuous credibility score in [0,1]
 binary_score:
   type: number
   minimum: 0
@@ -111,3 +116,27 @@ Walkthrough with OpenAPI spec:
   ```bash
   python tests/test_api.py
   ```
+
+## Internal Use
+
+The `/stats`, `/months`, and `/label_sets` endpoints are internal-only.
+
+### Client usage 
+
+Use the Python client instead of calling raw endpoints directly.
+
+```python
+import os
+import credigraph
+
+# EITHER pass token explicitly
+stats = credigraph.stats(internal_token="YOUR_INTERNAL_TOKEN")
+months = credigraph.months(internal_token="YOUR_INTERNAL_TOKEN")
+labels = credigraph.label_sets(internal_token="YOUR_INTERNAL_TOKEN")
+
+# OR use environment variable locally
+os.environ["INTERNAL_TOKEN"] = "YOUR_INTERNAL_TOKEN"
+stats = credigraph.stats()
+months = credigraph.months()
+labels = credigraph.label_sets()
+```

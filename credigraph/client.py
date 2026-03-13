@@ -1,7 +1,26 @@
 import os
+import json
 import requests
 from typing import Any, Dict, List
 from credigraph.utils import normalize_domain_variants, normalize_domains
+
+
+class PrettyDict(dict):
+    """Dict with JSON-style pretty string representation for interactive use."""
+
+    def __repr__(self) -> str:
+        return json.dumps(self, indent=2)
+
+    __str__ = __repr__
+
+
+class PrettyList(list):
+    """List with JSON-style pretty string representation for interactive use."""
+
+    def __repr__(self) -> str:
+        return json.dumps(self, indent=2)
+
+    __str__ = __repr__
 
 DEFAULT_API_URL = "https://credi-net-credinet.hf.space"
 DEFAULT_METHOD = "GAT-TEXT"
@@ -49,21 +68,6 @@ DEFAULT_ENDPOINT_HELP = [
         "method": "GET",
         "summary": "Query credibility scores for a single domain",
     },
-    {
-        "path": "/stats",
-        "method": "GET",
-        "summary": "Monthly graph composition statistics",
-    },
-    {
-        "path": "/months",
-        "method": "GET",
-        "summary": "Available monthly datasets and download locations",
-    },
-    {
-        "path": "/label_sets",
-        "method": "GET",
-        "summary": "Available label-set metadata",
-    },
 ]
 
 
@@ -83,10 +87,15 @@ class CrediGraphClient:
         self,
         api_url: str | None = None,
         token: str | None = None,
+        internal_token: str | None = None,
         timeout: int = 10,
     ):
         self.api_url = api_url or os.getenv("CREDI_API_URL") or DEFAULT_API_URL
         self.token = token or os.getenv("HF_TOKEN")
+        self.internal_token = (
+            internal_token
+            or os.getenv("INTERNAL_TOKEN")
+        )
         self.timeout = timeout
         
         try:
@@ -96,9 +105,9 @@ class CrediGraphClient:
             version = "unknown"
         self._user_agent = f"credigraph/{version}"
 
-    def _get_json(self, path: str) -> Dict[str, Any]:
+    def _get_json(self, path: str, include_internal: bool = False) -> Dict[str, Any]:
         url = f"{self.api_url}{path}"
-        headers = self._get_headers()
+        headers = self._get_headers(include_internal=include_internal)
 
         try:
             response = requests.get(url, headers=headers, timeout=self.timeout)
@@ -109,7 +118,7 @@ class CrediGraphClient:
                 f"Request to {url} timed out after {self.timeout}s"
             )
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self, include_internal: bool = False) -> Dict[str, str]:
         """Build request headers with versioning info."""
         headers = {
             "User-Agent": self._user_agent,
@@ -117,13 +126,14 @@ class CrediGraphClient:
         }
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
+        if include_internal and self.internal_token:
+            headers["X-Internal-Token"] = self.internal_token
         return headers
 
     def query_domain(
         self,
         domain: str,
         raw: bool = False,
-        precision: int | None = 2,
     ) -> Dict[str, Any]:
         """
         Query a single domain.
@@ -156,7 +166,7 @@ class CrediGraphClient:
                 if raw and "pc1_score" in result and isinstance(result["pc1_score"], (int, float)):
                     result["continuous_score"] = float(result["pc1_score"])
 
-                effective_precision = None if raw else precision
+                effective_precision = None if raw else 2
 
                 if "continuous_score" in result and isinstance(result["continuous_score"], (int, float)):
                     value = float(result["continuous_score"])
@@ -178,12 +188,12 @@ class CrediGraphClient:
 
                 if "binary_score" in result and isinstance(result["binary_score"], (int, float)):
                     value = float(result["binary_score"])
-                    result["binary_score"] = round(value, effective_precision) if effective_precision is not None else value
+                    result["binary_score"] = int(round(value))
 
                 # Hide legacy field from client output to keep a stable public payload.
                 result.pop("pc1_score", None)
                 
-                return result
+                return PrettyDict(result)
             except requests.exceptions.Timeout:
                 raise requests.exceptions.Timeout(
                     f"Request to {url} timed out after {self.timeout}s"
@@ -220,16 +230,16 @@ class CrediGraphClient:
 
     def stats(self) -> Dict[str, Any]:
         """Return monthly graph composition stats for all available datasets."""
-        return self._get_json("/stats")
+        return self._get_json("/stats", include_internal=True)
 
     def months(self) -> Dict[str, Any]:
         """Return downloadable monthly dataset entries and metadata."""
-        return self._get_json("/months")
+        return self._get_json("/months", include_internal=True)
 
     def label_sets(self) -> Dict[str, Any]:
         """Return metadata for the currently exposed label sets."""
         try:
-            return self._get_json("/label_sets")
+            return self._get_json("/label_sets", include_internal=True)
         except requests.exceptions.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 404:
                 return DEFAULT_LABEL_SETS
@@ -298,7 +308,6 @@ class CrediGraphClient:
         self,
         domains: List[str] | str,
         raw: bool = False,
-        precision: int | None = 2,
     ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """
         Query one or more domains.
@@ -310,7 +319,7 @@ class CrediGraphClient:
             Single result dict (if input was string) or list of result dicts
         """
         if isinstance(domains, str):
-            return self.query_domain(domains, raw=raw, precision=precision)
+            return self.query_domain(domains, raw=raw)
         
         domains = normalize_domains(domains)
-        return [self.query_domain(d, raw=raw, precision=precision) for d in domains]
+        return PrettyList([self.query_domain(d, raw=raw) for d in domains])

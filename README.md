@@ -19,7 +19,7 @@ pip install credigraph
 ## Quick Start
 
 ```python
-from credigraph import help, label_sets, metadata, months, query, stats
+from credigraph import help, metadata, query
 
 # Single domain
 result = query("apnews.com")
@@ -33,13 +33,6 @@ for result in results:
 
 # API/model metadata
 print(metadata())
-
-# Monthly graph stats and downloadable month catalog
-print(stats())
-print(months())
-
-# Label-set metadata
-print(label_sets())
 
 # Endpoint guide
 print(help())
@@ -64,7 +57,7 @@ server-side dataset uses a different storage convention.
 {
     "domain": "com.apnews",
     "continuous_score": 0.7,
-    "binary_score": 0.91
+    "binary_score": 1
 }
 ```
 
@@ -81,25 +74,10 @@ print(meta["score_sources"]["regression"])
 print(meta["score_sources"]["binary"])
 ```
 
-### Monthly Graph Endpoints
+### Internal Endpoints
 
-```python
-graph_stats = stats()
-print(graph_stats["months"][0]["month"])
-print(graph_stats["months"][0]["nodes"])
-print(graph_stats["months"][0]["edges"])
-
-catalog = months()
-print(catalog["months"][0]["download_url"])
-```
-
-### Label-Set Metadata
-
-```python
-labels = label_sets()
-print(labels["label_sets"][0]["name"])
-print(labels["label_sets"][0]["source_url"])
-```
+`stats`, `months`, and `label_sets` are internal-only and require `INTERNAL_TOKEN`.
+See [credigraph/README.md](credigraph/README.md) for internal usage.
 
 ### Endpoint Guide
 

@@ -17,7 +17,7 @@ BINARY_FILENAME = "MLP-Inference/Text+GAT/mlpInfer_binaryClassifcation_dec2024_e
 REGRESSION_SOURCE = f"https://huggingface.co/datasets/{DATASET_REPO}/blob/main/{quote(REGRESSION_FILENAME, safe='/')}"
 BINARY_SOURCE = f"https://huggingface.co/datasets/{DATASET_REPO}/blob/main/{quote(BINARY_FILENAME, safe='/')}"
 
-API_VERSION = "0.2.2"
+API_VERSION = "0.3.1"
 DATA_CUTOFF_MONTH = "2024-12"
 METHOD = "GAT-TEXT"
 
@@ -40,7 +40,7 @@ _DOMAIN_RE = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{
 def _require_internal_access(
     x_internal_token: str | None = Header(default=None, alias="X-Internal-Token"),
 ) -> None:
-    expected = os.getenv("CREDINET_INTERNAL_TOKEN")
+    expected = os.getenv("INTERNAL_TOKEN")
     if not expected:
         # Fail closed when token is not configured.
         raise HTTPException(status_code=503, detail="Internal endpoints are disabled")
@@ -200,7 +200,7 @@ def metadata():
     }
 
 
-@app.get("/label_sets")
+@app.get("/label_sets", dependencies=[Depends(_require_internal_access)], include_in_schema=False)
 def label_sets():
     return {
         "label_sets": [

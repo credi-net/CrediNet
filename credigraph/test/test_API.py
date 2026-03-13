@@ -101,6 +101,7 @@ def test_client_query_domain_falls_back_to_flipped_form(monkeypatch):
     assert result["domain"] == "com.apnews"
     assert result["continuous_score"] == 0.46
     assert result["binary_score"] == 0
+    assert isinstance(result["binary_score"], int)
     assert "pc1_score" not in result
 
 
@@ -156,7 +157,7 @@ def test_client_help(monkeypatch):
         if url.endswith("/metadata"):
             return FakeResponse(
                 {
-                    "api_version": "0.2.2",
+                    "api_version": "0.3.1",
                     "data_cutoff_month": "2024-12",
                     "method": "GAT-TEXT",
                     "score_sources": {"regression": "x", "binary": "y"},
@@ -182,12 +183,58 @@ def test_client_help(monkeypatch):
     result = client.help()
 
     assert result["source"] == "openapi"
-    assert result["api_version"] == "0.2.2"
+    assert result["api_version"] == "0.3.1"
     assert result["endpoints"][0]["path"] == "/by_domain/{domain}"
     assert result["endpoints"][0]["method"] == "GET"
 
 
-def test_client_query_precision_custom(monkeypatch):
+def test_client_stats_sends_internal_header(monkeypatch):
+    client = CrediGraphClient(api_url="https://example.test", internal_token="secret-token")
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"months": []}
+
+    def fake_get(url, headers, timeout):
+        assert url == "https://example.test/stats"
+        assert headers.get("X-Internal-Token") == "secret-token"
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    result = client.stats()
+    assert result == {"months": []}
+
+
+def test_client_label_sets_sends_internal_header(monkeypatch):
+    client = CrediGraphClient(api_url="https://example.test", internal_token="secret-token")
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"label_sets": []}
+
+    def fake_get(url, headers, timeout):
+        assert url == "https://example.test/label_sets"
+        assert headers.get("X-Internal-Token") == "secret-token"
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    result = client.label_sets()
+    assert result == {"label_sets": []}
+
+
+def test_client_query_default_rounding(monkeypatch):
     client = CrediGraphClient(api_url="https://example.test")
 
     class FakeResponse:
@@ -217,10 +264,11 @@ def test_client_query_precision_custom(monkeypatch):
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    result = client.query_domain("bbc.com", precision=4)
+    result = client.query_domain("bbc.com")
 
     assert result["continuous_score"] == 0.43
     assert result["binary_score"] == 0
+    assert isinstance(result["binary_score"], int)
     assert "pc1_score" not in result
 
 
@@ -258,4 +306,5 @@ def test_client_query_raw_uses_unrounded_score(monkeypatch):
 
     assert result["continuous_score"] == 0.4258555471897125
     assert result["binary_score"] == 0
+    assert isinstance(result["binary_score"], int)
     assert "pc1_score" not in result
