@@ -432,7 +432,7 @@ tags:
     description: Server status endpoints
 
 x-versioning:
-  currentVersion: "0.2.1"
+  currentVersion: "0.2.2"
   deprecationPolicy: |
     API versions are deprecated 6 months after a new version is released.
     Clients should monitor response headers for deprecation warnings.

@@ -100,7 +100,7 @@ def test_client_query_domain_falls_back_to_flipped_form(monkeypatch):
     ]
     assert result["domain"] == "com.apnews"
     assert result["continuous_score"] == 0.46
-    assert result["binary_score"] == 0.0
+    assert result["binary_score"] == 0
     assert "pc1_score" not in result
 
 
@@ -156,7 +156,7 @@ def test_client_help(monkeypatch):
         if url.endswith("/metadata"):
             return FakeResponse(
                 {
-                    "api_version": "0.2.1",
+                    "api_version": "0.2.2",
                     "data_cutoff_month": "2024-12",
                     "method": "GAT-TEXT",
                     "score_sources": {"regression": "x", "binary": "y"},
@@ -182,7 +182,7 @@ def test_client_help(monkeypatch):
     result = client.help()
 
     assert result["source"] == "openapi"
-    assert result["api_version"] == "0.2.1"
+    assert result["api_version"] == "0.2.2"
     assert result["endpoints"][0]["path"] == "/by_domain/{domain}"
     assert result["endpoints"][0]["method"] == "GET"
 
@@ -220,7 +220,7 @@ def test_client_query_precision_custom(monkeypatch):
     result = client.query_domain("bbc.com", precision=4)
 
     assert result["continuous_score"] == 0.43
-    assert result["binary_score"] == 0.0
+    assert result["binary_score"] == 0
     assert "pc1_score" not in result
 
 
@@ -257,5 +257,5 @@ def test_client_query_raw_uses_unrounded_score(monkeypatch):
     result = client.query_domain("bbc.com", raw=True)
 
     assert result["continuous_score"] == 0.4258555471897125
-    assert result["binary_score"] == 0.0
+    assert result["binary_score"] == 0
     assert "pc1_score" not in result

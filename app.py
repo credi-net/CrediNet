@@ -1,11 +1,13 @@
 from functools import lru_cache
+import os
+import secrets
 import json
 from pathlib import Path
 import re
 from urllib.parse import quote, urlparse
 
 import duckdb
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from huggingface_hub import hf_hub_download
 import tldextract
 
@@ -15,7 +17,7 @@ BINARY_FILENAME = "MLP-Inference/Text+GAT/mlpInfer_binaryClassifcation_dec2024_e
 REGRESSION_SOURCE = f"https://huggingface.co/datasets/{DATASET_REPO}/blob/main/{quote(REGRESSION_FILENAME, safe='/')}"
 BINARY_SOURCE = f"https://huggingface.co/datasets/{DATASET_REPO}/blob/main/{quote(BINARY_FILENAME, safe='/')}"
 
-API_VERSION = "0.2.1"
+API_VERSION = "0.2.2"
 DATA_CUTOFF_MONTH = "2024-12"
 METHOD = "GAT-TEXT"
 
@@ -33,6 +35,17 @@ label_sets_catalog: dict = {"label_sets": []}
 
 _extract = tldextract.TLDExtract(include_psl_private_domains=True)
 _DOMAIN_RE = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$")
+
+
+def _require_internal_access(
+    x_internal_token: str | None = Header(default=None, alias="X-Internal-Token"),
+) -> None:
+    expected = os.getenv("CREDINET_INTERNAL_TOKEN")
+    if not expected:
+        # Fail closed when token is not configured.
+        raise HTTPException(status_code=503, detail="Internal endpoints are disabled")
+    if not x_internal_token or not secrets.compare_digest(x_internal_token, expected):
+        raise HTTPException(status_code=403, detail="Forbidden")
 
 
 def _canonicalize(value: str) -> str:
@@ -225,7 +238,7 @@ def by_domain(domain: str):
     return out
 
 
-@app.get("/stats")
+@app.get("/stats", dependencies=[Depends(_require_internal_access)], include_in_schema=False)
 def stats():
     return {
         "months": [
@@ -243,7 +256,7 @@ def stats():
     }
 
 
-@app.get("/months")
+@app.get("/months", dependencies=[Depends(_require_internal_access)], include_in_schema=False)
 def months():
     return {
         "months": [
