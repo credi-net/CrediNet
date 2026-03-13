@@ -10,6 +10,7 @@ Domain credibility scoring client for fact-checking and online retrieval.
 [![Downloads](https://img.shields.io/pypi/dm/credigraph?style=flat&label=Downloads&labelColor=white&logo=pypi&logoColor=black)](https://pypi.org/project/credigraph/)
 [![Paper](https://img.shields.io/badge/arXiv-Paper-b31b1b?logo=arxiv)](https://arxiv.org/abs/2509.23340)
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-CrediNet-yellow?logo=huggingface&logoColor=white)](https://huggingface.co/credi-net)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 <!-- TODO: [![Docs](https://img.shields.io/readthedocs/credigraph?style=flat&label=Docs&labelColor=white&logo=readthedocs&logoColor=black)](https://credigraph.readthedocs.io/) --> 
 </div>
