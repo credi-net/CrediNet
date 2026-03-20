@@ -1,0 +1,40 @@
+site_name: CrediGraph Documentation
+site_url: https://sitename.example
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: purple
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+      code:
+        text: '#e9ecef'
+        background: '#1f2937'
+    - scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+      code:
+        text: '#1d1e2a'
+        background: '#f7f9ff'
+  font:
+    text: Inter
+    code: Red Hat Mono
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - content.code.copy
+    - navigation.footer
+    - content.table.caption
+  language: en
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/your-repo
+extra_css:
+  - stylesheets/custom.css
+copyright: Copyright &copy; 2026 CrediNet Organization
