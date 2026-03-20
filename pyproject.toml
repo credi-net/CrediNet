@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "credigraph"
-version = "0.1.6"
+version = "0.3.1"
 description = "Python client for the CrediGraph API"
 authors = [{name = "Complex Data Lab"}]
 requires-python = ">=3.10"
@@ -15,6 +15,7 @@ dependencies = [
     "docker>=7.1.0",
     "schemathesis>=4.10.2",
     "bump2version>=1.0.1",
+    "mkdocs-material>=9.7.6",
 ]
 
 [project.optional-dependencies]
