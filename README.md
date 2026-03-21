@@ -26,16 +26,16 @@ pip install credigraph
 ## Quick Start
 
 ```python
-from credigraph import query
+from credigraph import query, query_batch
 
 # Single domain
 result = query("apnews.com")
-print(result["continuous_score"])
+print(result["credible"])
 
 # Multiple domains
-results = query(["apnews.com", "cnn.com", "reuters.com"])
+results = query_batch(["apnews.com", "cnn.com", "reuters.com"])
 for result in results:
-    print(result["domain"], result["continuous_score"])
+    print(result["credible"])
 ```
 
 ### Automatic Normalization
@@ -50,45 +50,23 @@ query("EXAMPLE.COM")  # case-insensitive
 
 ### Response Format
 
+For the `query()` binary endpoint:
+
 ```json
 {
-    "domain": "com.apnews",
-    "continuous_score": 0.7
+    "domain": "apnews.com",
+    "credible": true
 }
 ```
 
-## Configuration
+For the `query_batch()` binary batch endpoint:
 
-### Token (Optional)
-
-The public API works without authentication. Set a token only if your deployment requires it:
-
-```bash
-export HF_TOKEN=hf_your_token_here
-```
-
-### Custom API Endpoint
-
-```python
-from credigraph import CrediGraphClient
-
-client = CrediGraphClient(
-    api_url="http://localhost:7860",  # Dev server
-    timeout=30
-)
-result = client.query("example.com")
-```
-
-### Environment Variables
-
-```bash
-export CREDI_API_URL=https://custom-api.example.com
-```
-
-```python
-from credigraph import CrediGraphClient
-
-client = CrediGraphClient()  # Reads CREDI_API_URL and HF_TOKEN automatically
+```json
+[
+    {"domain": "apnews.com", "credible": true},
+    {"domain": "cnn.com", "credible": true},
+    {"domain": "example.com", "credible": false}
+]
 ```
 
 ## Versioning
@@ -97,7 +75,7 @@ This package follows [semantic versioning](https://semver.org/):
 
 ```python
 import credigraph
-print(credigraph.__version__)  # e.g., "0.1.5"
+print(credigraph.__version__)  # 0.3.1
 ```
 
 ## API Contract
@@ -109,3 +87,4 @@ print(credigraph.__version__)  # e.g., "0.1.5"
 
 - **Issues**: [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
 - **Documentation**: this README (client usage) + [credigraph/README.md](credigraph/README.md) (developer workflow)
+- **Further issues:** [contact repo developer](emailto:emma.kondrup@mila.quebec)
