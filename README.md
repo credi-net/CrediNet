@@ -4,7 +4,7 @@
 
 <img src="img/credinet.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
 
-Domain credibility scoring client for fact-checking and online retrieval.
+Graph and Machine Learning-based domain credibility assessments on the web.
 
 [![PyPI](https://img.shields.io/pypi/v/credigraph?style=flat&label=PyPI&labelColor=white&logo=pypi&logoColor=black)](https://pypi.org/project/credigraph/)
 [![Downloads](https://img.shields.io/pypi/dm/credigraph?style=flat&label=Downloads&labelColor=white&logo=pypi&logoColor=black)](https://pypi.org/project/credigraph/)
@@ -12,7 +12,7 @@ Domain credibility scoring client for fact-checking and online retrieval.
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-CrediNet-yellow?logo=huggingface&logoColor=white)](https://huggingface.co/credi-net)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
-<!-- TODO: [![Docs](https://img.shields.io/readthedocs/credigraph?style=flat&label=Docs&labelColor=white&logo=readthedocs&logoColor=black)](https://credigraph.readthedocs.io/) --> 
+[![Docs](https://img.shields.io/readthedocs/credinet?style=flat&label=Docs&labelColor=white&logo=readthedocs&logoColor=black)](https://credinet.readthedocs.io/en/latest/) 
 </div>
 
 ---
@@ -26,78 +26,57 @@ pip install credigraph
 ## Quick Start
 
 ```python
-from credigraph import query
+from credigraph import query, query_batch
 
 # Single domain
 result = query("apnews.com")
-print(result["continuous_score"])
+print(result["credible"])
 
 # Multiple domains
-results = query(["apnews.com", "cnn.com", "reuters.com"])
+results = query_batch(["apnews.com", "cnn.com", "reuters.com"])
 for result in results:
-    print(result["domain"], result["continuous_score"])
+    print(result["credible"])
 ```
 
-### Automatic Normalization
+### Input Normalization
 
-The client handles various URL/domain formats:
+The client handles various input formats:
 ```python
 query("example.com")
 query("www.example.com")
 query("https://example.com/article?x=1")
-query("EXAMPLE.COM")  # case-insensitive
+query("EXAMPLE.COM") 
+# will all resolve to example.com
 ```
 
 ### Response Format
 
+For one domain's credibility score, use the `query()` endpoint:
+
 ```json
 {
-    "domain": "com.apnews",
-    "continuous_score": 0.7
+    "domain": "apnews.com",
+    "credible": true
 }
 ```
 
-## Configuration
+For a list of domains, use the `query_batch()` batch endpoint:
 
-### Token (Optional)
-
-The public API works without authentication. Set a token only if your deployment requires it:
-
-```bash
-export HF_TOKEN=hf_your_token_here
-```
-
-### Custom API Endpoint
-
-```python
-from credigraph import CrediGraphClient
-
-client = CrediGraphClient(
-    api_url="http://localhost:7860",  # Dev server
-    timeout=30
-)
-result = client.query("example.com")
-```
-
-### Environment Variables
-
-```bash
-export CREDI_API_URL=https://custom-api.example.com
-```
-
-```python
-from credigraph import CrediGraphClient
-
-client = CrediGraphClient()  # Reads CREDI_API_URL and HF_TOKEN automatically
+```json
+[
+    {"domain": "apnews.com", "credible": true},
+    {"domain": "cnn.com", "credible": true},
+    {"domain": "example.com", "credible": false}
+]
 ```
 
 ## Versioning
 
-This package follows [semantic versioning](https://semver.org/):
+The CrediGraph API follows [semantic versioning](https://semver.org/):
 
 ```python
 import credigraph
-print(credigraph.__version__)  # e.g., "0.1.5"
+print(credigraph.__version__)  # 0.3.1
 ```
 
 ## API Contract
@@ -108,4 +87,5 @@ print(credigraph.__version__)  # e.g., "0.1.5"
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
-- **Documentation**: this README (client usage) + [credigraph/README.md](credigraph/README.md) (developer workflow)
+- **Documentation**: read the [official CrediGraph documentation](https://credinet.readthedocs.io/en/latest/) or the repo's [README](README.md) (client usage) + [credigraph/README.md](credigraph/README.md) (developer workflow)
+- **Further issues:** [contact the developers](emailto:emma.kondrup@mila.quebec).
