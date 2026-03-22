@@ -456,9 +456,10 @@ wheels = [
 
 [[package]]
 name = "credigraph"
-version = "0.3.1"
+version = "0.3.2"
 source = { editable = "." }
 dependencies = [
+    { name = "build" },
     { name = "bump2version" },
     { name = "docker" },
     { name = "duckdb" },
@@ -470,6 +471,7 @@ dependencies = [
     { name = "requests" },
     { name = "schemathesis" },
     { name = "tldextract" },
+    { name = "twine" },
 ]
 
 [package.optional-dependencies]
@@ -491,6 +493,7 @@ scripts = [
 
 [package.metadata]
 requires-dist = [
+    { name = "build", specifier = ">=1.4.0" },
     { name = "build", marker = "extra == 'dev'", specifier = ">=1.4.0" },
     { name = "bump2version", specifier = ">=1.0.1" },
     { name = "docker", specifier = ">=7.1.0" },
@@ -509,6 +512,7 @@ requires-dist = [
     { name = "scikit-learn", marker = "extra == 'scripts'", specifier = ">=1.7.2" },
     { name = "seaborn", marker = "extra == 'scripts'", specifier = ">=0.13.2" },
     { name = "tldextract", specifier = ">=5.3.1" },
+    { name = "twine", specifier = ">=6.2.0" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=6.2.0" },
 ]
 provides-extras = ["dev", "scripts"]
