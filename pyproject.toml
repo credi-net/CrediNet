@@ -41,3 +41,8 @@ include = ["credigraph*"]
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/credi-net/CrediNet"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that call the live API",
+]

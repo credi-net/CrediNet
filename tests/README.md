@@ -1,17 +1,16 @@
 # Test Suite
 
 - **`test_api.py`** - Main test suite validating API client behavior against OpenAPI spec
-- **`test_helper.py`** - quick manual helper to check sample queries.
+- **`test_helper.py`** - Pytest unit / integrations tests for query functions 
+- **`conftest.py`** - Shared pytest fixtures (client, timeout, sample domains)
 
 
 ### Run all tests
 ```bash
-./tests/test_all.sh
+test_all.sh
 ```
 
-Client tests or manual test only:
+Or run individual test files:
 ```bash
-python test_api.py
-# or
-python test_helper.py 
+pytest -q test_api.py test_helper.py
 ```

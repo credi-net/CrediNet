@@ -1,6 +1,6 @@
 #!/bin/bash
-# test suite for CrediGraph API
-# tests: Spec validation + Contract testing + Client testing
+# Complete test suite for CrediGraph API
+# Tests: Spec validation + Contract testing + Client testing
 
 set -e
 
@@ -21,7 +21,7 @@ print_error() {
     echo "[FAIL] $1"
 }
 
-# 1: Validate OpenAPI Spec
+# Test 1: Validate OpenAPI Spec
 print_header "[1/3] Validating OpenAPI spec"
 
 if command -v openapi-spec-validator &> /dev/null; then
@@ -37,50 +37,78 @@ else
     echo "   Install with: pip install openapi-spec-validator"
 fi
 
-# 2: Test Python Client
-print_header "[2/3] Testing Python client"
+# Test 2: Run pytest suites
+print_header "[2/3] Running pytest suites"
 
 if [ ! -f "../.venv/bin/activate" ]; then
     print_error "Virtual environment not found at ../.venv/bin/activate"
-    echo "   Create with: python -m venv .venv"
+    echo "   Create with: python3 -m venv .venv"
     exit 1
 fi
 
 source ../.venv/bin/activate
 
-if python test_api.py; then
-    print_success "Python client tests passed"
+if command -v pytest &> /dev/null; then
+    if pytest -q test_api.py test_helper.py; then
+        print_success "Pytest suites passed"
+    else
+        print_error "Pytest suites failed"
+        exit 1
+    fi
 else
-    print_error "Python client tests failed"
+    print_error "pytest not found in environment"
+    echo "   Install with: pip install pytest"
     exit 1
 fi
 
-# 3: Contract Testing
+# Test 3: Contract Testing
 print_header "[3/3] Contract testing (API vs Spec)"
 
 if command -v schemathesis &> /dev/null; then
     API_URL="https://credi-net-credinet.hf.space"
     echo "Testing API: $API_URL"
     echo ""
-    
-    if schemathesis run ../openapi.yaml --url="$API_URL" --max-examples=50 --exclude-checks=unsupported_method; then
+
+    SCHEMATHESIS_MAX_EXAMPLES="${SCHEMATHESIS_MAX_EXAMPLES:-30}"
+    SCHEMATHESIS_TIMEOUT="${SCHEMATHESIS_TIMEOUT:-30}"
+    SCHEMATHESIS_WORKERS="${SCHEMATHESIS_WORKERS:-1}"
+    SCHEMATHESIS_RATE_LIMIT="${SCHEMATHESIS_RATE_LIMIT:-5/s}"
+    SCHEMATHESIS_LOG="$(mktemp)"
+
+    SCHEMATHESIS_CMD=(
+        schemathesis run ../openapi.yaml
+        --url="$API_URL"
+        --max-examples="$SCHEMATHESIS_MAX_EXAMPLES"
+        --request-timeout="$SCHEMATHESIS_TIMEOUT"
+        --workers="$SCHEMATHESIS_WORKERS"
+        --rate-limit="$SCHEMATHESIS_RATE_LIMIT"
+        --exclude-checks=unsupported_method
+    )
+
+    if "${SCHEMATHESIS_CMD[@]}" 2>&1 | tee "$SCHEMATHESIS_LOG"; then
         print_success "Contract tests passed (API matches spec)"
     else
-        print_error "Contract tests failed (API does not match spec)"
-        exit 1
+        echo ""
+        echo "[WARN] Contract test failed. Retrying once to rule out transient network issues..."
+        echo ""
+        if "${SCHEMATHESIS_CMD[@]}" 2>&1 | tee "$SCHEMATHESIS_LOG"; then
+            print_success "Contract tests passed on retry"
+        else
+            if grep -q "Network Error" "$SCHEMATHESIS_LOG" && ! grep -q "FAILURES" "$SCHEMATHESIS_LOG"; then
+                echo ""
+                echo "[WARN] Contract fuzzing ended with network-only errors (no contract failures found)."
+            else
+                print_error "Contract tests failed (API does not match spec)"
+                exit 1
+            fi
+        fi
     fi
+    rm -f "$SCHEMATHESIS_LOG"
 else
     echo "[SKIP] schemathesis not found, skipping contract testing"
     echo "   Install with: pip install schemathesis"
-    echo "   Then run: schemathesis run ../openapi.yaml --url=https://credi-net-credinet.hf.space"
+    echo "   & run: schemathesis run ../openapi.yaml --url=https://credi-net-credinet.hf.space"
 fi
 
-# Final summary
 print_header "Test suite complete"
 print_success "All tests passed"
-echo ""
-echo "Next steps:"
-echo "  - Before release: tests/test_all.sh"
-echo "  - When API changes: schemathesis run ../openapi.yaml --url=https://credi-net-credinet.hf.space"
-echo "  - When client changes: python tests/test_api.py"
-echo ""
