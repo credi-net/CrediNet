@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: CrediGraph API
   description: Public API for domain credibility scoring. No authentication required.
-  version: "0.1.6"
+  version: "0.3.1"
   contact:
     name: Complex Data Lab
   license:
@@ -11,16 +11,43 @@ info:
 servers:
   - url: https://credi-net-credinet.hf.space
     description: Production server
-  - url: http://localhost:7860
-    description: Local development server
 
 paths:
-  /by_domain/{domain}:
+  /:
     get:
+      operationId: root
+      summary: Service root endpoint
+      description: Returns service status and docs path.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Root response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - api_version
+                  - docs
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  api_version:
+                    type: string
+                    example: "0.3.1"
+                  docs:
+                    type: string
+                    example: "/docs"
+
+  /by_domain:
+    post:
       operationId: queryDomain
       summary: Query credibility scores for a single domain
       description: |
-        Returns credibility metrics and metadata for the specified domain.
+        Returns credibility metrics for a single domain.
         
         **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
         
@@ -29,15 +56,13 @@ paths:
         - Queries
       parameters:
         - name: domain
-          in: path
+          in: query
           required: true
-          description: |
-            Domain to query (normalized form).
-            Examples: `com.apnews`, `co.uk.theregister`
+          description: Single domain to query. Must be a valid domain with at least one dot and valid TLD.
           schema:
             type: string
-            minLength: 3
-            pattern: '^[a-z0-9.-]+$'
+            pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
+            example: "apnews.com"
       responses:
         '200':
           description: Successful query
@@ -46,9 +71,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainResult'
         '400':
-          description: Bad request (invalid domain format)
+          description: Bad request (invalid domain format or empty string)
         '404':
           description: Domain not found in database
+        '422':
+          description: Validation error (missing or invalid parameter)
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Server error
+
+  /by_domains:
+    post:
+      operationId: queryDomains
+      summary: Query credibility scores for multiple domains
+      description: |
+        Returns credibility metrics for multiple domains.
+        
+        **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
+        
+        **Public API:** No authentication required.
+      tags:
+        - Queries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
+              description: List of domains to query. Each domain must be a valid domain name.
+              example: ["apnews.com", "cnn.com"]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/DomainResult'
+                    - $ref: '#/components/schemas/DomainNotFoundResult'
+        '400':
+          description: Bad request (invalid domain format)
+        '422':
+          description: Validation error (invalid request body)
         '429':
           description: Rate limit exceeded
         '500':
@@ -70,15 +141,58 @@ paths:
                 type: object
                 required:
                   - status
+                  - api_version
                 properties:
                   status:
                     type: string
                     enum: [ok, degraded]
                     example: "ok"
-                  rows:
-                    type: integer
-                    description: "Number of domains in database"
-                    example: 45030252
+                  api_version:
+                    type: string
+                    description: Server API version
+                    example: "0.3.1"
+
+  /metadata:
+    get:
+      operationId: metadata
+      summary: API and score metadata
+      description: Returns API version and references to score sources.
+      tags:
+        - System
+      responses:
+        '200':
+          description: Metadata response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - api_version
+                  - data_cutoff_month
+                  - method
+                  - score_sources
+                properties:
+                  api_version:
+                    type: string
+                    example: "0.3.1"
+                  data_cutoff_month:
+                    type: string
+                    example: "2024-12"
+                  method:
+                    type: string
+                    example: "Content + topology-based"
+                  score_sources:
+                    type: object
+                    required:
+                      - regression
+                      - binary
+                    properties:
+                      regression:
+                        type: string
+                        format: uri
+                      binary:
+                        type: string
+                        format: uri
 
 components:
   schemas:
@@ -86,42 +200,32 @@ components:
       type: object
       required:
         - domain
-        - continuous_score
+        - credibility_level
+        - credible
       properties:
         domain:
           type: string
-          description: The queried domain (flipped format)
-          example: "com.apnews"
-        continuous_score:
+          description: The queried domain
+          example: "apnews.com"
+        credibility_level:
           type: number
-          minimum: 0
-          maximum: 1
-          description: |
-            Continuous credibility score (0-1).
-            Based on primary classification model (pc1).
-            Note: A binary_score will be added in future versions.
-          example: 0.697
-        source_reliability:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: Additional source reliability metric
-          nullable: true
-        predicted_class:
+          format: float
+          description: Continuous credibility score (0.0-1.0, higher is more credible)
+          example: 0.85
+        credible:
+          type: boolean
+          description: Binary credibility classification (0 = not credible, 1 = credible)
+          example: true
+
+    DomainNotFoundResult:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
           type: string
-          enum: [credible, misinformation, neutral]
-          description: Predicted credibility class
-          nullable: true
-        metadata:
-          type: object
-          description: Additional metadata about the domain
-          properties:
-            last_checked:
-              type: string
-              format: date-time
-            model_version:
-              type: string
-              example: "1.2.0"
+          description: Queried domain not found in available scores
+          example: "unknown.example"
 
 tags:
   - name: Queries
@@ -130,7 +234,7 @@ tags:
     description: Server status endpoints
 
 x-versioning:
-  currentVersion: "0.1.5"
+  currentVersion: "0.3.1"
   deprecationPolicy: |
     API versions are deprecated 6 months after a new version is released.
     Clients should monitor response headers for deprecation warnings.
@@ -138,5 +242,4 @@ x-versioning:
     Server tracks client versions via User-Agent header.
     Clients should always include: User-Agent: credigraph/X.Y.Z
   plannedChanges: |
-    - Version 0.2.0: Add binary_score field (separate from continuous_score)
-    - Version 0.2.0: Add confidence interval to continuous_score
+    - Version 0.4.0: Add confidence intervals to credibility scores
