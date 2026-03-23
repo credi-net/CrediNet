@@ -1,7 +1,6 @@
 import re
 from typing import Dict, List, Optional, Iterable
 from urllib.parse import urlparse
-import pandas as pd 
 import tldextract
 
 _extract = tldextract.TLDExtract(include_psl_private_domains=True)

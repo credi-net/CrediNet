@@ -1,36 +1,28 @@
-#!/usr/bin/env python3
-"""
-Helper script to test API queries with sample domains.
-"""
-
-from credigraph import CrediGraphClient
-import json
+import pytest
+from credigraph import query, query_batch
 
 
-def test_single_query():
-    """Query single domain: reuters.com"""
-    print("\nSingle domain query: reuters.com")
-    
-    client = CrediGraphClient()
-    result = client.query("reuters.com")
-    
-    print(json.dumps(result, indent=2))
-    print()
+@pytest.mark.integration
+def test_single_query_helper(api_timeout: int) -> None:
+    result = query("reuters.com", timeout=api_timeout)
+
+    assert isinstance(result, dict)
+    assert "domain" in result
+    assert isinstance(result["domain"], str)
+    if "credible" in result:
+        assert isinstance(result["credible"], bool)
 
 
-def test_batch_query():
-    """Query multiple domains: reuters.com, cbc.ca, cnn.com"""
-    print("Batch query: reuters.com, cbc.ca, cnn.com")
-    
-    client = CrediGraphClient()
+@pytest.mark.integration
+def test_batch_query_helper(api_timeout: int) -> None:
     domains = ["reuters.com", "cbc.ca", "cnn.com"]
-    results = client.query(domains)
-    
-    for result in results:
-        print(json.dumps(result, indent=2))
-        print()
+    results = query_batch(domains, timeout=api_timeout)
 
-
-if __name__ == "__main__":
-    test_single_query()
-    test_batch_query()
+    assert isinstance(results, list)
+    assert len(results) == len(domains)
+    for item in results:
+        assert isinstance(item, dict)
+        assert "domain" in item
+        assert isinstance(item["domain"], str)
+        if "credible" in item:
+            assert isinstance(item["credible"], bool)
