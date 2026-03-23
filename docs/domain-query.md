@@ -7,7 +7,7 @@ The public interface consists of:
 - `query(domain: str) -> DomainResult`
 - `query_batch(domains: list[str]) -> list[DomainResult]`
 
-## `DomainResult` Type
+## Return Type
 
 ```python
 from typing import TypedDict
@@ -48,14 +48,9 @@ Example:
 from credigraph import query
 
 result = query("apnews.com")
-print(result["domain"])
-print(result["credible"])
-```
 
-Example response:
-
-```python
-{
+# then, 
+result == {
     "domain": "apnews.com",
     "credible": True,
 }
@@ -90,13 +85,9 @@ from credigraph import query_batch
 
 results = query_batch(["apnews.com", "cnn.com", "reuters.com"])
 for result in results:
-    print(result["domain"], result["credible"])
-```
 
-Example response:
-
-```python
-[
+# then,
+results == [
     {"domain": "apnews.com", "credible": True},
     {"domain": "cnn.com", "credible": False},
     {"domain": "reuters.com", "credible": False},
