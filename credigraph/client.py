@@ -147,10 +147,8 @@ class CrediGraphClient:
 
     def query_internal(self, domain: str) -> Dict[str, Any]:
         """
-        Query a single domain and return both binary and continuous credibility.
+        [Internal] Query a single domain and return both binary and continuous credibility.
         
-        Internal use only. Requires X-Internal-Token authentication.
-
         Args:
             domain: Single domain string
 
@@ -188,10 +186,8 @@ class CrediGraphClient:
 
     def query_internal_batch(self, domains: List[str], order: str = "original") -> List[Dict[str, Any]]:
         """
-        Query multiple domains and return list of internal credibility results.
+        [Internal] Query multiple domains and return list of internal credibility results.
         
-        Internal use only. Requires X-Internal-Token authentication.
-
         Args:
             domains: List of domain strings
             order: "original" (default) or "ranked" (sort by credibility_level descending, then domain ascending)
@@ -244,10 +240,8 @@ class CrediGraphClient:
 
     def stats(self) -> dict:
         """
-        Get knowledge graph statistics.
-        
-        Internal use only. Requires X-Internal-Token authentication.
-        
+        [Internal] Get graph statistics.
+                
         Returns:
             Dictionary with months array containing stats (nodes, edges, overlaps, etc.)
             
@@ -275,10 +269,8 @@ class CrediGraphClient:
 
     def months(self) -> dict:
         """
-        Get available monthly knowledge graph snapshots.
-        
-        Internal use only. Requires X-Internal-Token authentication.
-        
+        [Internal] Get available monthly knowledge graph snapshots.
+                
         Returns:
             Dictionary with months array containing snapshot metadata
             
@@ -310,14 +302,12 @@ def query(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs
 ):
     """Convenience function to query a single domain (binary credible only)."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs
     )
     return client.query(domain)
 
@@ -328,14 +318,12 @@ def query_batch(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs,
 ):
     """Convenience function to query multiple domains (binary credible only)."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs,
     )
     return client.query_batch(domains, order=order)
 
@@ -345,14 +333,12 @@ def query_internal(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs,
 ):
-    """Convenience function to query a domain with full details (continuous + binary scores). Requires token."""
+    """Convenience function to query a domain with full details. Requires token."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs,
     )
     return client.query_internal(domain)
 
@@ -363,14 +349,12 @@ def query_internal_batch(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs,
 ):
     """Convenience function to query multiple domains with full details. Requires token."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs,
     )
     return client.query_internal_batch(domains, order=order)
 
@@ -379,14 +363,12 @@ def stats(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs,
 ):
-    """Get knowledge graph statistics. Requires token."""
+    """Get graph statistics. Requires token."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs,
     )
     return client.stats()
 
@@ -395,13 +377,11 @@ def months(
     api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
-    **kwargs,
 ):
     """Get available monthly knowledge graph snapshots. Requires token."""
     client = CrediGraphClient(
         api_url=api_url,
         token=token,
         timeout=timeout,
-        **kwargs,
     )
     return client.months()
