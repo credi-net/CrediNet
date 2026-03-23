@@ -1,11 +1,11 @@
 from .client import (
     CrediGraphClient,
+    months,
     query,
     query_batch,
     query_internal,
     query_internal_batch,
     stats,
-    months,
 )
 
 __version__ = "0.3.2"

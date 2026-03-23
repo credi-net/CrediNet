@@ -4,8 +4,8 @@ This page collects the main references for API contract, development workflow, a
 
 ## API Contract
 
-- OpenAPI spec: [openapi.yaml](../openapi.yaml)
-- Developing guide (versioning, testing): [credigraph/README.md](../credigraph/README.md)
+- OpenAPI spec: [openapi.yaml](https://github.com/credi-net/CrediNet/blob/main/openapi.yaml)
+- Developing guide (versioning, testing): [credigraph/README.md](https://github.com/credi-net/CrediNet/blob/main/credigraph/README.md)
 
 ## Configuration Notes
 
@@ -14,4 +14,4 @@ The client can be configured with request timeout parameters in the query helper
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
-- **Documentation**: [README.md](../README.md) for public usage and [credigraph/README.md](../credigraph/README.md) for developer workflow. For remaining questions, [contact us](emailto:emma.kondrup@mila.quebec).
+- **Documentation**: See also the API Repo's [README.md](https://github.com/credi-net/CrediNet/blob/main/README.md) for public usage and the [dev guide](https://github.com/credi-net/CrediNet/blob/main/credigraph/README.md) for developer workflow. For remaining questions, [contact us](mailto:emma.kondrup@mila.quebec).
