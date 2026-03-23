@@ -2,7 +2,7 @@
 
 # CrediNet
 
-<img src="img/credinet.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
+<img src="https://cdn-uploads.huggingface.co/production/uploads/681e3663829118a837bbaeb3/Mz_vqAW1rlfEDkx2Mv4fd.png" alt="CrediNet Logo" style="width: 100px; height: auto;" />
 
 Graph and Machine Learning-based domain credibility assessments on the web.
 
