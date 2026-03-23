@@ -8,7 +8,7 @@ from .client import (
     stats,
 )
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 __author__ = "Complex Data Lab"
 
 __all__ = [
