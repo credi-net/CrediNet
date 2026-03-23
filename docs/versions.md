@@ -4,6 +4,7 @@
 
 | Version | Main points | Release date |
 | --- | --- | --- |
+| 0.3.4 | Internal Mode Implementation | 2026-03-23 |
 | 0.3.3 | Set up Pypi documentation and update general docs | 2026-03-23 |
 | 0.3.2 | Output format updates; client-side updates; test suite updates; API and documentation improvements | 2026-03-22 |
 | 0.3.1 | Added binary score support and internal methods; updated API contract and test suite | 2026-03-13 |
