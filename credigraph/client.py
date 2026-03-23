@@ -43,18 +43,16 @@ class CrediGraphClient:
     Python client for the CrediGraph API.
         
     Args:
-        api_url: Base URL of the CrediGraph API (default: production)
         token: Token for internal API access (for supplemental )
         timeout: Request timeout in seconds (default: 10)
     """
     
     def __init__(
         self,
-        api_url: str | None = None,
         token: str | None = None,
         timeout: int = 10,
     ):
-        self.api_url = api_url or os.getenv("CREDI_API_URL") or DEFAULT_API_URL
+        self.api_url = DEFAULT_API_URL
         self.single_q_url = f"{self.api_url}/by_domain"
         self.batch_q_url = f"{self.api_url}/by_domains"
         self.token = token or os.getenv("CREDI_INTERNAL_TOKEN")
@@ -174,11 +172,16 @@ class CrediGraphClient:
             r.raise_for_status()
             result = r.json()
 
-            return {
-                "domain": result["domain"],
-                "credibility_level": result["credibility_level"],
-                "credible": result["credible"],
-            }
+            out = {"domain": result["domain"]}
+            if "credibility_level" in result:
+                out["credibility_level"] = result["credibility_level"]
+            if "credible" in result:
+                out["credible"] = result["credible"]
+            if "gt_reg" in result:
+                out["gt_reg"] = result["gt_reg"]
+            if "gt_bin" in result:
+                out["gt_bin"] = result["gt_bin"]
+            return out
         except requests.exceptions.Timeout:
             raise requests.exceptions.Timeout(
                 f"Request to {self.single_q_url} timed out after {self.timeout}s"
@@ -221,6 +224,10 @@ class CrediGraphClient:
                     out["credibility_level"] = item["credibility_level"]
                 if "credible" in item:
                     out["credible"] = item["credible"]
+                if "gt_reg" in item:
+                    out["gt_reg"] = item["gt_reg"]
+                if "gt_bin" in item:
+                    out["gt_bin"] = item["gt_bin"]
                 results.append(out)
 
             if order == "ranked":
@@ -299,13 +306,11 @@ class CrediGraphClient:
 
 def query(
     domain: str,
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query a single domain (binary credible only)."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -315,13 +320,11 @@ def query(
 def query_batch(
     domains: list[str],
     order: str = "original",
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query multiple domains (binary credible only)."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -330,13 +333,11 @@ def query_batch(
 
 def query_internal(
     domain: str,
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query a domain with full details. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -346,13 +347,11 @@ def query_internal(
 def query_internal_batch(
     domains: list[str],
     order: str = "original",
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query multiple domains with full details. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -360,13 +359,11 @@ def query_internal_batch(
 
 
 def stats(
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Get graph statistics. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -374,13 +371,11 @@ def stats(
 
 
 def months(
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Get available monthly knowledge graph snapshots. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )

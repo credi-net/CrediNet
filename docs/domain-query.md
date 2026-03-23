@@ -25,7 +25,6 @@ class DomainResult(TypedDict):
 ```python
 def query(
     domain: str,
-    api_url: str | None = None,
     timeout: int = 10,
 ) -> DomainResult: ...
 ```
@@ -35,7 +34,6 @@ Query one domain.
 Parameters:
 
 - `domain`: Domain name to query.
-- `api_url`: Optional API base URL override.
 - `timeout`: Request timeout in seconds.
 
 Returns:
@@ -61,7 +59,6 @@ result == {
 ```python
 def query_batch(
     domains: list[str],
-    api_url: str | None = None,
     timeout: int = 10,
 ) -> list[DomainResult]: ...
 ```
@@ -71,7 +68,6 @@ Query multiple domains in one call.
 Parameters:
 
 - `domains`: List of domain names to query.
-- `api_url`: Optional API base URL override.
 - `timeout`: Request timeout in seconds.
 
 Returns:
@@ -103,7 +99,6 @@ results == [
 
 ## Configuration
 
-Environment variables [for usual uses, these are not to be overriden]
+Environment variables (for most cases this can be ignored):
 
-- `CREDI_API_URL`: Override the default API URL.
 - `CREDI_INTERNAL_TOKEN` for internal commands.

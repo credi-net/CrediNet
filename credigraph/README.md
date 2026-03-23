@@ -61,36 +61,6 @@ python -m build
 twine upload dist/*
 ```
 
-## API Field Naming Convention
-
-- Canonical score field: `credible : boolean` with 0 = not credible, 1 = credible.
-- Continuous field: `credibility_level : float` in [0,1].
-
-```yaml
-credibility_level:
-  type: number
-  minimum: 0
-  maximum: 1
-  description: Continuous credibility score (0-1), rounded to 2 decimal places
-
-credible:
-  type: boolean
-  description: Binary credibility classification 
-```
-
-Modifying response fields:
-1. [../openapi.yaml](../openapi.yaml)
-2. API backend response
-3. `tests/test_api.py`
-4. Root [../README.md](../README.md) if user-facing behavior changed
-
-
-## Internal API & Client Access
-
-For detailed credibility scores (continuous + binary), use the internal client methods with a team token.
-
-[PENDING: internal client methods will soon integrate human-labelled sets as well]
-
 ### Token Mechanism
 
 Use internal token as follows: 
@@ -105,11 +75,20 @@ client = CrediGraphClient(token="token")
 
 result = client.query_internal("apnews.com")
 print(result)
-# Output: {"domain": "apnews.com", "credibility_level": 0.85, "credible": True}
+# Output example:
+# {
+#   "domain": "apnews.com",
+#   "credibility_level": 0.85,
+#   "credible": True,
+#   "gt_reg": True,
+#   "gt_bin": False,
+# }
 
 results = client.query_internal_batch(["apnews.com", "cnn.com"])
 # Sort by credibility_level
 results = client.query_internal_batch(["example.com", "apnews.com"], order="ranked")
+
+# gt_reg / gt_bin are True when that score comes from a ground-truth label set.
 ```
 
 ## Versioning 
