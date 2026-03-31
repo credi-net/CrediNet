@@ -81,7 +81,7 @@ The CrediGraph API follows [semantic versioning](https://semver.org/):
 
 ```python
 import credigraph
-print(credigraph.__version__)  # 0.3.1
+print(credigraph.__version__)  # 0.4.0
 ```
 
 Refer to the [full versioning documentation](https://credinet.readthedocs.io/en/latest/versions/) for more details. 

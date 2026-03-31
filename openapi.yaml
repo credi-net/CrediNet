@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: CrediGraph API
-  description: Public API for domain credibility scoring. No authentication required.
-  version: "0.3.4"
+  description: API for querying domain credibility scores.
+  version: "0.4.0"
   contact:
     name: Complex Data Lab
   license:
@@ -17,9 +17,7 @@ paths:
     get:
       operationId: root
       summary: Service root endpoint
-      description: Returns service status and docs path.
-      tags:
-        - System
+      tags: [System]
       responses:
         '200':
           description: Root response
@@ -27,84 +25,102 @@ paths:
             application/json:
               schema:
                 type: object
-                required:
-                  - status
-                  - api_version
-                  - docs
+                required: [status, api_version, docs]
                 properties:
                   status:
                     type: string
                     example: ok
                   api_version:
                     type: string
-                    example: "0.3.1"
+                    example: "0.4.0"
                   docs:
                     type: string
                     example: "/docs"
 
+  /health:
+    get:
+      operationId: health
+      summary: Health check endpoint
+      tags: [System]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, api_version]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                    example: ok
+                  api_version:
+                    type: string
+                    example: "0.4.0"
+
+  /metadata:
+    get:
+      operationId: metadata
+      summary: API and score metadata
+      tags: [System]
+      responses:
+        '200':
+          description: Metadata response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [api_version, data_cutoff_month, method, score_sources]
+                properties:
+                  api_version:
+                    type: string
+                    example: "0.4.0"
+                  data_cutoff_month:
+                    type: string
+                    example: "2024-12"
+                  method:
+                    type: string
+                    example: "Content + topology-based"
+                  score_sources:
+                    type: object
+                    required: [regression, binary]
+                    properties:
+                      regression:
+                        type: string
+                        format: uri
+                      binary:
+                        type: string
+                        format: uri
+
   /by_domain:
     post:
       operationId: queryDomain
-      summary: Query credibility scores for a single domain
-      description: |
-        Returns credibility metrics for a single domain.
-        
-        **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
-        
-        **Public API:** No authentication required.
-      tags:
-        - Queries
+      summary: Public single-domain query
+      description: Returns model-derived credibility values for one domain.
+      tags: [Queries]
       parameters:
-        - name: domain
-          in: query
-          required: true
-          description: Single domain to query. Must be a valid domain with at least one dot and valid TLD.
-          schema:
-            type: string
-            pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
-            example: "apnews.com"
+        - $ref: '#/components/parameters/DomainQuery'
       responses:
         '200':
           description: Successful query
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainResult'
+                $ref: '#/components/schemas/ScoredDomainResult'
         '400':
-          description: Bad request (invalid domain format or empty string)
+          description: Bad request (invalid domain)
         '404':
-          description: Domain not found in database
-        '422':
-          description: Validation error (missing or invalid parameter)
-        '429':
-          description: Rate limit exceeded
-        '500':
-          description: Server error
+          description: Domain not found in model outputs
 
   /by_domains:
     post:
       operationId: queryDomains
-      summary: Query credibility scores for multiple domains
-      description: |
-        Returns credibility metrics for multiple domains.
-        
-        **Versioning:** Include `User-Agent: credigraph/X.Y.Z` header for client tracking.
-        
-        **Public API:** No authentication required.
-      tags:
-        - Queries
+      summary: Public batch query
+      description: Returns model-derived credibility values for multiple domains.
+      tags: [Queries]
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: string
-                minLength: 1
-                pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
-              description: List of domains to query. Each domain must be a valid domain name.
-              example: ["apnews.com", "cnn.com"]
+        $ref: '#/components/requestBodies/DomainList'
       responses:
         '200':
           description: Successful query
@@ -114,132 +130,150 @@ paths:
                 type: array
                 items:
                   anyOf:
-                    - $ref: '#/components/schemas/DomainResult'
+                    - $ref: '#/components/schemas/ScoredDomainResult'
                     - $ref: '#/components/schemas/DomainNotFoundResult'
         '400':
-          description: Bad request (invalid domain format)
-        '422':
-          description: Validation error (invalid request body)
-        '429':
-          description: Rate limit exceeded
-        '500':
-          description: Server error
+          description: Bad request (invalid domain)
 
-  /health:
-    get:
-      operationId: health
-      summary: Health check endpoint
-      description: Returns API availability status. Public endpoint, no authentication required.
-      tags:
-        - System
+  /by_domain_gt:
+    post:
+      operationId: queryDomainGroundTruth
+      summary: Internal single-domain query (ground truth)
+      description: Returns GT-derived scores (regression from DQR, binary from DomainRel).
+      tags: [Internal]
+      security:
+        - InternalToken: []
+      parameters:
+        - $ref: '#/components/parameters/DomainQuery'
       responses:
         '200':
-          description: Service is healthy
+          description: Successful query
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - status
-                  - api_version
-                properties:
-                  status:
-                    type: string
-                    enum: [ok, degraded]
-                    example: "ok"
-                  api_version:
-                    type: string
-                    description: Server API version
-                    example: "0.3.1"
+                $ref: '#/components/schemas/ScoredDomainResult'
+        '400':
+          description: Bad request (invalid domain)
+        '403':
+          description: Forbidden (invalid or missing token)
+        '404':
+          description: Domain not found in GT label sets
+        '503':
+          description: Internal endpoints are disabled
 
-  /metadata:
-    get:
-      operationId: metadata
-      summary: API and score metadata
-      description: Returns API version and references to score sources.
-      tags:
-        - System
+  /by_domains_gt:
+    post:
+      operationId: queryDomainsGroundTruth
+      summary: Internal batch query (ground truth)
+      description: Returns GT-derived scores (regression from DQR, binary from DomainRel).
+      tags: [Internal]
+      security:
+        - InternalToken: []
+      requestBody:
+        $ref: '#/components/requestBodies/DomainList'
       responses:
         '200':
-          description: Metadata response
+          description: Successful query
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - api_version
-                  - data_cutoff_month
-                  - method
-                  - score_sources
-                properties:
-                  api_version:
-                    type: string
-                    example: "0.3.1"
-                  data_cutoff_month:
-                    type: string
-                    example: "2024-12"
-                  method:
-                    type: string
-                    example: "Content + topology-based"
-                  score_sources:
-                    type: object
-                    required:
-                      - regression
-                      - binary
-                    properties:
-                      regression:
-                        type: string
-                        format: uri
-                      binary:
-                        type: string
-                        format: uri
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ScoredDomainResult'
+                    - $ref: '#/components/schemas/DomainNotFoundResult'
+        '400':
+          description: Bad request (invalid domain)
+        '403':
+          description: Forbidden (invalid or missing token)
+        '503':
+          description: Internal endpoints are disabled
+
+  /label_sets:
+    get:
+      operationId: labelSets
+      summary: Internal label set metadata
+      tags: [Internal]
+      security:
+        - InternalToken: []
+      responses:
+        '200':
+          description: Label-set metadata
+        '403':
+          description: Forbidden (invalid or missing token)
+        '503':
+          description: Internal endpoints are disabled
 
 components:
+  securitySchemes:
+    InternalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
+
+  parameters:
+    DomainQuery:
+      name: domain
+      in: query
+      required: true
+      description: Single domain to query.
+      schema:
+        type: string
+        pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
+        example: apnews.com
+
+  requestBodies:
+    DomainList:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              pattern: '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,}$'
+            example: [apnews.com, cnn.com]
+
   schemas:
-    DomainResult:
+    ScoredDomainResult:
       type: object
-      required:
-        - domain
-        - credibility_level
-        - credible
+      required: [domain]
       properties:
         domain:
           type: string
-          description: The queried domain
-          example: "apnews.com"
+          example: apnews.com
         credibility_level:
           type: number
           format: float
-          description: Continuous credibility score (0.0-1.0, higher is more credible)
+          description: Continuous credibility score.
           example: 0.85
         credible:
           type: boolean
-          description: Binary credibility classification (0 = not credible, 1 = credible)
+          description: Binary credibility score.
           example: true
 
     DomainNotFoundResult:
       type: object
-      required:
-        - domain
+      required: [domain]
       properties:
         domain:
           type: string
-          description: Queried domain not found in available scores
-          example: "unknown.example"
+          description: Queried domain not found in the relevant source.
+          example: unknown.example
 
 tags:
   - name: Queries
-    description: Domain credibility queries
+    description: Public model-based query endpoints
+  - name: Internal
+    description: Token-protected internal endpoints
   - name: System
-    description: Server status endpoints
+    description: Service status and metadata endpoints
 
 x-versioning:
-  currentVersion: "0.3.1"
+  currentVersion: "0.4.0"
   deprecationPolicy: |
     API versions are deprecated 6 months after a new version is released.
-    Clients should monitor response headers for deprecation warnings.
   clientVersionTracking: |
     Server tracks client versions via User-Agent header.
-    Clients should always include: User-Agent: credigraph/X.Y.Z
-  plannedChanges: |
-    - Version 0.4.0: Add confidence intervals to credibility scores
+    Clients should include: User-Agent: credigraph/X.Y.Z
