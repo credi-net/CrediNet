@@ -16,16 +16,26 @@ from typing import TypedDict
 class DomainResult(TypedDict):
     domain: str
     credible: bool
+
+
+class InternalDomainResult(TypedDict, total=False):
+    domain: str
+    credible: bool
+    credibility_level: float
 ```
 
 `credible` is the binary credibility prediction returned by the API.
+
+For internal methods:
+
+- `query_internal*` returns values from model predictions.
+- `query_GT*` returns values from ground-truth label sets (regression from DQR `pc1`, binary from DomainRel `bin`).
 
 ## `query`
 
 ```python
 def query(
     domain: str,
-    api_url: str | None = None,
     timeout: int = 10,
 ) -> DomainResult: ...
 ```
@@ -35,7 +45,6 @@ Query one domain.
 Parameters:
 
 - `domain`: Domain name to query.
-- `api_url`: Optional API base URL override.
 - `timeout`: Request timeout in seconds.
 
 Returns:
@@ -61,7 +70,6 @@ result == {
 ```python
 def query_batch(
     domains: list[str],
-    api_url: str | None = None,
     timeout: int = 10,
 ) -> list[DomainResult]: ...
 ```
@@ -71,7 +79,6 @@ Query multiple domains in one call.
 Parameters:
 
 - `domains`: List of domain names to query.
-- `api_url`: Optional API base URL override.
 - `timeout`: Request timeout in seconds.
 
 Returns:
@@ -100,10 +107,4 @@ results == [
 - `ValueError` on invalid domain input.
 - `requests.exceptions.Timeout` when the request exceeds the configured timeout.
 - `requests.RequestException` for HTTP or transport errors.
-
-## Configuration
-
-Environment variables [for usual uses, these are not to be overriden]
-
-- `CREDI_API_URL`: Override the default API URL.
-- `CREDI_INTERNAL_TOKEN` for internal commands.
+- `PermissionError` for internal methods when token is missing.

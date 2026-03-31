@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "credigraph"
-version = "0.3.2"
+version = "0.4.0"
 description = "Python client for the CrediGraph API"
 readme = "README.md"
 authors = [{name = "Complex Data Lab"}]
@@ -22,6 +22,7 @@ dependencies = [
     "huggingface-hub>=1.7.2",
     "build>=1.4.0",
     "twine>=6.2.0",
+    "uvicorn>=0.42.0",
 ]
 
 [project.optional-dependencies]

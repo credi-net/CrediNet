@@ -1,14 +1,14 @@
 from .client import (
     CrediGraphClient,
-    months,
     query,
+    query_GT,
+    query_GT_batch,
     query_batch,
     query_internal,
     query_internal_batch,
-    stats,
 )
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 __author__ = "Complex Data Lab"
 
 __all__ = [
@@ -16,8 +16,8 @@ __all__ = [
     "query_batch",
     "query_internal",
     "query_internal_batch",
-    "stats",
-    "months",
+    "query_GT",
+    "query_GT_batch",
     "CrediGraphClient",
     "__version__",
 ]

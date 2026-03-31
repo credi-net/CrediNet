@@ -43,20 +43,20 @@ class CrediGraphClient:
     Python client for the CrediGraph API.
         
     Args:
-        api_url: Base URL of the CrediGraph API (default: production)
         token: Token for internal API access (for supplemental )
         timeout: Request timeout in seconds (default: 10)
     """
     
     def __init__(
         self,
-        api_url: str | None = None,
         token: str | None = None,
         timeout: int = 10,
     ):
-        self.api_url = api_url or os.getenv("CREDI_API_URL") or DEFAULT_API_URL
+        self.api_url = DEFAULT_API_URL
         self.single_q_url = f"{self.api_url}/by_domain"
         self.batch_q_url = f"{self.api_url}/by_domains"
+        self.single_q_gt_url = f"{self.api_url}/by_domain_gt"
+        self.batch_q_gt_url = f"{self.api_url}/by_domains_gt"
         self.token = token or os.getenv("CREDI_INTERNAL_TOKEN")
         self.timeout = timeout
         
@@ -90,7 +90,12 @@ class CrediGraphClient:
         headers["Content-Type"] = "application/json"
 
         try:
-            r = requests.post(self.single_q_url, params={"domain": canonical}, headers=headers, timeout=self.timeout)
+            r = requests.post(
+                self.single_q_url,
+                params={"domain": canonical},
+                headers=headers,
+                timeout=self.timeout,
+            )
             r.raise_for_status()
             result = r.json()
 
@@ -147,7 +152,7 @@ class CrediGraphClient:
 
     def query_internal(self, domain: str) -> Dict[str, Any]:
         """
-        [Internal] Query a single domain and return both binary and continuous credibility.
+        [Internal] Query a single domain using model predictions only.
         
         Args:
             domain: Single domain string
@@ -170,15 +175,21 @@ class CrediGraphClient:
         headers["X-Internal-Token"] = self.token
 
         try:
-            r = requests.post(self.single_q_url, params={"domain": canonical}, headers=headers, timeout=self.timeout)
+            r = requests.post(
+                self.single_q_url,
+                params={"domain": canonical},
+                headers=headers,
+                timeout=self.timeout,
+            )
             r.raise_for_status()
             result = r.json()
 
-            return {
-                "domain": result["domain"],
-                "credibility_level": result["credibility_level"],
-                "credible": result["credible"],
-            }
+            out = {"domain": result["domain"]}
+            if "credibility_level" in result:
+                out["credibility_level"] = result["credibility_level"]
+            if "credible" in result:
+                out["credible"] = result["credible"]
+            return out
         except requests.exceptions.Timeout:
             raise requests.exceptions.Timeout(
                 f"Request to {self.single_q_url} timed out after {self.timeout}s"
@@ -186,7 +197,7 @@ class CrediGraphClient:
 
     def query_internal_batch(self, domains: List[str], order: str = "original") -> List[Dict[str, Any]]:
         """
-        [Internal] Query multiple domains and return list of internal credibility results.
+        [Internal] Query multiple domains using model predictions only.
         
         Args:
             domains: List of domain strings
@@ -210,7 +221,12 @@ class CrediGraphClient:
         headers["X-Internal-Token"] = self.token
 
         try:
-            r = requests.post(self.batch_q_url, json=canonical_domains, headers=headers, timeout=self.timeout)
+            r = requests.post(
+                self.batch_q_url,
+                json=canonical_domains,
+                headers=headers,
+                timeout=self.timeout,
+            )
             r.raise_for_status()
             results_data = r.json()
 
@@ -238,74 +254,113 @@ class CrediGraphClient:
                 f"Request to {self.batch_q_url} timed out after {self.timeout}s"
             )
 
-    def stats(self) -> dict:
+    def query_GT(self, domain: str) -> Dict[str, Any]:
         """
-        [Internal] Get graph statistics.
-                
+        [Internal] Query a single domain using ground-truth label sets.
+
+        Regression score comes from DQR (`pc1`) and binary score comes from
+        DomainRel (`bin`).
+
+        Args:
+            domain: Single domain string
+
         Returns:
-            Dictionary with months array containing stats (nodes, edges, overlaps, etc.)
-            
+            Dictionary with domain, credibility_level, and credible fields
+
         Raises:
             PermissionError: If internal_token not provided
         """
         if not self.token:
             raise PermissionError(
-                "token required for stats(). "
+                "token required for query_GT(). "
                 "Pass to CrediGraphClient(token=...) or set CREDI_INTERNAL_TOKEN env var."
             )
-        
-        url = f"{self.api_url}/stats"
+
+        canonical = _canonicalize_domain(domain)
         headers = self._get_headers()
+        headers["Content-Type"] = "application/json"
         headers["X-Internal-Token"] = self.token
 
         try:
-            r = requests.get(url, headers=headers, timeout=self.timeout)
+            r = requests.post(self.single_q_gt_url, params={"domain": canonical}, headers=headers, timeout=self.timeout)
             r.raise_for_status()
-            return r.json()
+            result = r.json()
+
+            out = {"domain": result["domain"]}
+            if "credibility_level" in result:
+                out["credibility_level"] = result["credibility_level"]
+            if "credible" in result:
+                out["credible"] = result["credible"]
+            return out
         except requests.exceptions.Timeout:
             raise requests.exceptions.Timeout(
-                f"Request to {url} timed out after {self.timeout}s"
+                f"Request to {self.single_q_gt_url} timed out after {self.timeout}s"
             )
 
-    def months(self) -> dict:
+    def query_GT_batch(self, domains: List[str], order: str = "original") -> List[Dict[str, Any]]:
         """
-        [Internal] Get available monthly knowledge graph snapshots.
-                
+        [Internal] Query multiple domains using ground-truth label sets.
+
+        Regression score comes from DQR (`pc1`) and binary score comes from
+        DomainRel (`bin`).
+
+        Args:
+            domains: List of domain strings
+            order: "original" (default) or "ranked" (sort by credibility_level descending, then domain ascending)
+
         Returns:
-            Dictionary with months array containing snapshot metadata
-            
+            List of dicts with domain, credibility_level, and credible fields
+
         Raises:
             PermissionError: If internal_token not provided
         """
         if not self.token:
             raise PermissionError(
-                "token required for months(). "
+                "token required for query_GT_batch(). "
                 "Pass to CrediGraphClient(token=...) or set CREDI_INTERNAL_TOKEN env var."
             )
-        
-        url = f"{self.api_url}/months"
+
+        canonical_domains = _canonicalize_domains(domains)
         headers = self._get_headers()
+        headers["Content-Type"] = "application/json"
         headers["X-Internal-Token"] = self.token
 
         try:
-            r = requests.get(url, headers=headers, timeout=self.timeout)
+            r = requests.post(self.batch_q_gt_url, json=canonical_domains, headers=headers, timeout=self.timeout)
             r.raise_for_status()
-            return r.json()
+            results_data = r.json()
+
+            results = []
+            for item in results_data:
+                out = {"domain": item["domain"]}
+                if "credibility_level" in item:
+                    out["credibility_level"] = item["credibility_level"]
+                if "credible" in item:
+                    out["credible"] = item["credible"]
+                results.append(out)
+
+            if order == "ranked":
+                results.sort(
+                    key=lambda x: (
+                        -float(x.get("credibility_level", float("-inf"))),
+                        x["domain"],
+                    )
+                )
+
+            return results
         except requests.exceptions.Timeout:
             raise requests.exceptions.Timeout(
-                f"Request to {url} timed out after {self.timeout}s"
+                f"Request to {self.batch_q_gt_url} timed out after {self.timeout}s"
             )
 
 
 def query(
     domain: str,
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query a single domain (binary credible only)."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -315,13 +370,11 @@ def query(
 def query_batch(
     domains: list[str],
     order: str = "original",
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query multiple domains (binary credible only)."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -330,13 +383,11 @@ def query_batch(
 
 def query_internal(
     domain: str,
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query a domain with full details. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
@@ -346,42 +397,39 @@ def query_internal(
 def query_internal_batch(
     domains: list[str],
     order: str = "original",
-    api_url: str | None = None,
     token: str | None = None,
     timeout: int = 10,
 ):
     """Convenience function to query multiple domains with full details. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
     return client.query_internal_batch(domains, order=order)
 
 
-def stats(
-    api_url: str | None = None,
+def query_GT(
+    domain: str,
     token: str | None = None,
     timeout: int = 10,
 ):
-    """Get graph statistics. Requires token."""
+    """Convenience function for ground-truth lookup. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
-    return client.stats()
+    return client.query_GT(domain)
 
 
-def months(
-    api_url: str | None = None,
+def query_GT_batch(
+    domains: list[str],
+    order: str = "original",
     token: str | None = None,
     timeout: int = 10,
 ):
-    """Get available monthly knowledge graph snapshots. Requires token."""
+    """Convenience function for ground-truth batch lookup. Requires token."""
     client = CrediGraphClient(
-        api_url=api_url,
         token=token,
         timeout=timeout,
     )
-    return client.months()
+    return client.query_GT_batch(domains, order=order)
