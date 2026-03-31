@@ -80,15 +80,18 @@ print(result)
 #   "domain": "apnews.com",
 #   "credibility_level": 0.85,
 #   "credible": True,
-#   "gt_reg": True,
-#   "gt_bin": False,
 # }
 
 results = client.query_internal_batch(["apnews.com", "cnn.com"])
 # Sort by credibility_level
 results = client.query_internal_batch(["example.com", "apnews.com"], order="ranked")
 
-# gt_reg / gt_bin are True when that score comes from a ground-truth label set.
+# Ground-truth mode: DQR regression + DomainRel binary
+gt_result = client.query_GT("apnews.com")
+gt_results = client.query_GT_batch(["apnews.com", "cnn.com"], order="ranked")
+
+# query_internal* uses model predictions only.
+# query_GT* uses ground-truth label sets only.
 ```
 
 ## Versioning 
