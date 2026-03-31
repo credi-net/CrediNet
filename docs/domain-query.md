@@ -16,9 +16,20 @@ from typing import TypedDict
 class DomainResult(TypedDict):
     domain: str
     credible: bool
+
+
+class InternalDomainResult(TypedDict, total=False):
+    domain: str
+    credible: bool
+    credibility_level: float
 ```
 
 `credible` is the binary credibility prediction returned by the API.
+
+For internal methods:
+
+- `query_internal*` returns values from model predictions.
+- `query_GT*` returns values from ground-truth label sets (regression from DQR `pc1`, binary from DomainRel `bin`).
 
 ## `query`
 
@@ -96,9 +107,4 @@ results == [
 - `ValueError` on invalid domain input.
 - `requests.exceptions.Timeout` when the request exceeds the configured timeout.
 - `requests.RequestException` for HTTP or transport errors.
-
-## Configuration
-
-Environment variables (for most cases this can be ignored):
-
-- `CREDI_INTERNAL_TOKEN` for internal commands.
+- `PermissionError` for internal methods when token is missing.

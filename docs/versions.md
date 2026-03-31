@@ -4,6 +4,7 @@
 
 | Version | Main points | Release date |
 | --- | --- | --- |
+| 0.4.0 | Split internal API into prediction-only (`query_internal`) and GT-only (`query_GT`); removed legacy token client methods and revert to 1.0.0 version of regression scores (binary still 1.1.0 until both sync on 1.2.0) | 2026-03-31 |
 | 0.3.4 | Internal Mode Implementation | 2026-03-23 |
 | 0.3.3 | Set up Pypi documentation and update general docs | 2026-03-23 |
 | 0.3.2 | Output format updates; client-side updates; test suite updates; API and documentation improvements | 2026-03-22 |
