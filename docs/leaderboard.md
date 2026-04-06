@@ -2,7 +2,7 @@
 
 Benchmark results for domain credibility prediction. Both tasks use a **0–1 scale; higher is better**.
 
-> **Want to appear here?** Run your method on the CrediNet benchmark and [open an issue](https://github.com/credi-net/CrediNet/issues) with your results, code, and contact information.
+> **Want to appear here?** Run your method on CrediBench and [open an issue](https://github.com/credi-net/CrediNet/issues) with your results, code, and contact information.
 
 ---
 
