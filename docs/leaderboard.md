@@ -2,9 +2,6 @@
 
 Benchmark results for domain credibility prediction. Both tasks use a **0–1 scale; higher is better**.
 
-> **Want to appear here?** Run your method on CrediBench and [open an issue](https://github.com/credi-net/CrediNet/issues) with your results, code, and contact information.
-
----
 
 ## Tasks
 
@@ -15,7 +12,7 @@ Benchmark results for domain credibility prediction. Both tasks use a **0–1 sc
 
 ## Binary Classification
 
-### Domain credibility binary classification
+### Domain credibility prediction
 
 ##### Accuracy and F1 Scores on test set. **Higher is better.**
 
@@ -40,7 +37,7 @@ The main evaluation metrics is **Accuracy**.
 
 ## Regression
 
-### Domain credibility scoring (regression)
+### Domain credibility scoring 
 
 ##### Mean and Max. Absolute Error on test set. **Higher is better.**
 
@@ -58,3 +55,7 @@ The main evaluation metric is **Mean Absolute Error (MAE)**.
 | 7. | Mean | 0.167 | 0.546 | N/A | N/A | 
 | 8. | SEO-based GNN | 0.428 | 0.956 | Carragher et al. | 2025| 
 
+
+> **Submissions:** Run your method on CrediBench and [open an issue](https://github.com/credi-net/CrediNet/issues) with your results, code, and contact information.
+
+---
