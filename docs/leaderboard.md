@@ -17,14 +17,14 @@ Benchmark results for domain credibility prediction. Both tasks use a **0–1 sc
 
 ### Domain credibility binary classification
 
-##### Accuracy and F1 Scores on CrediBench test set. **Higher is better.**
+##### Accuracy and F1 Scores on test set. **Higher is better.**
 
 Predict whether a domain is credible (1) or not (0).
 The main evaluation metrics is **Accuracy**.
 
 | Rank | Method | Acc. | F1 | Team | Year |
 | :--: | ------ | :---: | :----: | ---- | ---- |
-| 1. | MLP (Graph + Text) *(Ours)* | 83.6 $\pm$ 0.03 | 83.2 | CrediNet team | 2025 | 
+| **1.** | **MLP (Graph + Text) *(Ours)*** | **83.6 $\pm$ 0.03** | **83.2** | **CrediNet team** | **2025** | 
 | 2. | GAT w/ Text Embeddings *(Ours)* | 76.1 $\pm$ 0.36 | 75.2 | CrediNet team | 2025 | 
 | 3. | GAT w/ Random Initialization *(Ours)* | 68.9 $\pm$ 0.18 | 69.7 | CrediNet team | 2025 | 
 | 3. | Text Embedding-based *(Ours)* | 63.2 $\pm$ 0.02 | 60.5 | CrediNet team | 2025 | 
@@ -40,16 +40,16 @@ The main evaluation metrics is **Accuracy**.
 
 ## Regression
 
-### Domain credibility score regression
+### Domain credibility scoring (regression)
 
-##### Mean and Max. Absolute Error on CrediBench test set. Higher is better.
+##### Mean and Max. Absolute Error on test set. **Higher is better.**
 
 Predict a continuous credibility score in **[0, 1]**.
 The main evaluation metric is **Mean Absolute Error (MAE)**.
 
 | Rank | Method | MAE | Max(AE) | Team | Year |
 | :--: | ------ | :---: | :----: | ---- | ---- |
-| 1. | MLP (Graph + Text) *(Ours)* | 0.112 $\pm$ 0.001 | 0.544 | CrediNet team | 2025 | 
+| **1.** | **MLP (Graph + Text) *(Ours)*** | **0.112 $\pm$ 0.001** | **0.544** | **CrediNet team** | **2025** | 
 | 2. | GAT w/ Text Embeddings *(Ours)* | 0.114 $\pm$ 0.001 | 0.477 | CrediNet team | 2025 | 
 | 3. | GCN w/ Text Embeddings *(Ours)* | 0.114 $\pm$ 0.002 | 0.849 | CrediNet team | 2025 | 
 | 4. | LightGBM | 0.145 | 0.630 | Kadkhoda et al. | 2025 |
