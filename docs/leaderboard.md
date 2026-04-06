@@ -24,10 +24,10 @@ The main evaluation metrics is **Accuracy**.
 
 | Rank | Method | Acc. | F1 | Team | Year |
 | :--: | ------ | :---: | :----: | ---- | ---- |
-| **1.** | **MLP (Graph + Text) *(Ours)*** | **83.6 $\pm$ 0.03** | **83.2** | **CrediNet team** | **2025** | 
-| 2. | GAT w/ Text Embeddings *(Ours)* | 76.1 $\pm$ 0.36 | 75.2 | CrediNet team | 2025 | 
-| 3. | GAT w/ Random Initialization *(Ours)* | 68.9 $\pm$ 0.18 | 69.7 | CrediNet team | 2025 | 
-| 3. | Text Embedding-based *(Ours)* | 63.2 $\pm$ 0.02 | 60.5 | CrediNet team | 2025 | 
+| **1.** | **MLP (Graph + Text) *(Ours)*** | **83.6 ± 0.03** | **83.2** | **CrediNet team** | **2025** | 
+| 2. | GAT w/ Text Embeddings *(Ours)* | 76.1 ± 0.36 | 75.2 | CrediNet team | 2025 | 
+| 3. | GAT w/ Random Initialization *(Ours)* | 68.9 ± 0.18 | 69.7 | CrediNet team | 2025 | 
+| 3. | Text Embedding-based *(Ours)* | 63.2 ± 0.02 | 60.5 | CrediNet team | 2025 | 
 | 4. | LightGBM | 56.0 | 70.7 | Kadkhoda et al. | 2025 |
 | 5. | LLM-URL + Web Search | 54.35 | 63.03 | Yang et al. *(enhanced)* | 2025 | 
 | 6. | Constant | 53.0 | 69.1 | N/A | N/A | 
@@ -49,9 +49,9 @@ The main evaluation metric is **Mean Absolute Error (MAE)**.
 
 | Rank | Method | MAE | Max(AE) | Team | Year |
 | :--: | ------ | :---: | :----: | ---- | ---- |
-| **1.** | **MLP (Graph + Text) *(Ours)*** | **0.112 $\pm$ 0.001** | **0.544** | **CrediNet team** | **2025** | 
-| 2. | GAT w/ Text Embeddings *(Ours)* | 0.114 $\pm$ 0.001 | 0.477 | CrediNet team | 2025 | 
-| 3. | GCN w/ Text Embeddings *(Ours)* | 0.114 $\pm$ 0.002 | 0.849 | CrediNet team | 2025 | 
+| **1.** | **MLP (Graph + Text) *(Ours)*** | **0.112 ± 0.001** | **0.544** | **CrediNet team** | **2025** | 
+| 2. | GAT w/ Text Embeddings *(Ours)* | 0.114 ± 0.001 | 0.477 | CrediNet team | 2025 | 
+| 3. | GCN w/ Text Embeddings *(Ours)* | 0.114 ± 0.002 | 0.849 | CrediNet team | 2025 | 
 | 4. | LightGBM | 0.145 | 0.630 | Kadkhoda et al. | 2025 |
 | 5. | LLM-URL + Web Search | 0.158 | 0.719 | Yang et al. *(enhanced)* | 2025 | 
 | 6. | LLM-URL | 0.162 | 0.765 | Yang et al. | 2025 | 
