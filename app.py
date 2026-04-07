@@ -27,7 +27,7 @@ DOMAINREL_SOURCE = f"https://huggingface.co/datasets/{DOMAINREL_DATASET_REPO}/bl
 DQR_LABELS_PATH = Path(__file__).parent / "data" / "domain_pc1.csv"
 DQR_SOURCE = "data/domain_pc1.csv"
 
-API_VERSION = "0.4.0"
+API_VERSION = "0.4.1"
 DATA_CUTOFF_MONTH = "2024-12"
 METHOD = "Content + topology-based"
 

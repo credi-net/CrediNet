@@ -10,7 +10,7 @@ from .client import (
     query_batch,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __author__ = "Complex Data Lab"
 
 __all__ = [

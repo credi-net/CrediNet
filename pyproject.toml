@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "credigraph"
-version = "0.4.0"
+version = "0.4.1"
 description = "Python client for the CrediGraph API"
 readme = "README.md"
 authors = [{name = "Complex Data Lab"}]
