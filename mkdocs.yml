@@ -35,6 +35,12 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/your-org/your-repo
+nav:
+  - Home: index.md
+  - Domain Query: domain-query.md
+  - API Configuration: api-configuration.md
+  - Leaderboard: leaderboard.md
+  - Versions: versions.md
 extra_css:
   - stylesheets/custom.css
 copyright: Copyright &copy; 2026 CrediNet Organization

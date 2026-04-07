@@ -1,23 +1,27 @@
 from .client import (
     CrediGraphClient,
+    _query_cts,
+    _query_cts_batch,
+    _query_domainrel,
+    _query_domainrel_batch,
+    _query_dqr,
+    _query_dqr_batch,
     query,
-    query_GT,
-    query_GT_batch,
     query_batch,
-    query_internal,
-    query_internal_batch,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __author__ = "Complex Data Lab"
 
 __all__ = [
     "query",
     "query_batch",
-    "query_internal",
-    "query_internal_batch",
-    "query_GT",
-    "query_GT_batch",
+    "_query_cts",
+    "_query_cts_batch",
+    "_query_domainrel",
+    "_query_domainrel_batch",
+    "_query_dqr",
+    "_query_dqr_batch",
     "CrediGraphClient",
     "__version__",
 ]

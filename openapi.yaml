@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: CrediGraph API
   description: API for querying domain credibility scores.
-  version: "0.4.0"
+  version: "0.4.1"
   contact:
     name: Complex Data Lab
   license:
@@ -135,14 +135,12 @@ paths:
         '400':
           description: Bad request (invalid domain)
 
-  /by_domain_gt:
+  /by_domain_cts:
     post:
-      operationId: queryDomainGroundTruth
-      summary: Internal single-domain query (ground truth)
-      description: Returns GT-derived scores (regression from DQR, binary from DomainRel).
+      operationId: queryDomainContinuous
+      summary: Internal single-domain continuous prediction
+      description: Returns continuous (regression) credibility predictions from model.
       tags: [Internal]
-      security:
-        - InternalToken: []
       parameters:
         - $ref: '#/components/parameters/DomainQuery'
       responses:
@@ -154,21 +152,15 @@ paths:
                 $ref: '#/components/schemas/ScoredDomainResult'
         '400':
           description: Bad request (invalid domain)
-        '403':
-          description: Forbidden (invalid or missing token)
         '404':
-          description: Domain not found in GT label sets
-        '503':
-          description: Internal endpoints are disabled
+          description: Domain not found in model outputs
 
-  /by_domains_gt:
+  /by_domains_cts:
     post:
-      operationId: queryDomainsGroundTruth
-      summary: Internal batch query (ground truth)
-      description: Returns GT-derived scores (regression from DQR, binary from DomainRel).
+      operationId: queryDomainsContinuous
+      summary: Internal batch continuous prediction
+      description: Returns continuous (regression) credibility predictions from model.
       tags: [Internal]
-      security:
-        - InternalToken: []
       requestBody:
         $ref: '#/components/requestBodies/DomainList'
       responses:
@@ -184,33 +176,92 @@ paths:
                     - $ref: '#/components/schemas/DomainNotFoundResult'
         '400':
           description: Bad request (invalid domain)
-        '403':
-          description: Forbidden (invalid or missing token)
-        '503':
-          description: Internal endpoints are disabled
 
-  /label_sets:
-    get:
-      operationId: labelSets
-      summary: Internal label set metadata
+  /by_domain_dr:
+    post:
+      operationId: queryDomainDomainRel
+      summary: Internal single-domain DomainRel query
+      description: Returns binary credibility labels from DomainRel ground-truth.
       tags: [Internal]
-      security:
-        - InternalToken: []
+      parameters:
+        - $ref: '#/components/parameters/DomainQuery'
       responses:
         '200':
-          description: Label-set metadata
-        '403':
-          description: Forbidden (invalid or missing token)
-        '503':
-          description: Internal endpoints are disabled
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoredDomainResult'
+        '400':
+          description: Bad request (invalid domain)
+        '404':
+          description: Domain not found in DomainRel labels
+
+  /by_domains_dr:
+    post:
+      operationId: queryDomainsDomainRel
+      summary: Internal batch DomainRel query
+      description: Returns binary credibility labels from DomainRel ground-truth.
+      tags: [Internal]
+      requestBody:
+        $ref: '#/components/requestBodies/DomainList'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ScoredDomainResult'
+                    - $ref: '#/components/schemas/DomainNotFoundResult'
+        '400':
+          description: Bad request (invalid domain)
+
+  /by_domain_dqr:
+    post:
+      operationId: queryDomainDQR
+      summary: Internal single-domain DQR query
+      description: Returns continuous credibility labels from DQR ground-truth.
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/DomainQuery'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoredDomainResult'
+        '400':
+          description: Bad request (invalid domain)
+        '404':
+          description: Domain not found in DQR labels
+
+  /by_domains_dqr:
+    post:
+      operationId: queryDomainsDQR
+      summary: Internal batch DQR query
+      description: Returns continuous credibility labels from DQR ground-truth.
+      tags: [Internal]
+      requestBody:
+        $ref: '#/components/requestBodies/DomainList'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ScoredDomainResult'
+                    - $ref: '#/components/schemas/DomainNotFoundResult'
+        '400':
+          description: Bad request (invalid domain)
 
 components:
-  securitySchemes:
-    InternalToken:
-      type: apiKey
-      in: header
-      name: X-Internal-Token
-
   parameters:
     DomainQuery:
       name: domain
@@ -266,7 +317,7 @@ tags:
   - name: Queries
     description: Public model-based query endpoints
   - name: Internal
-    description: Token-protected internal endpoints
+    description: Internal query endpoints (model continuous, DomainRel binary, DQR regression)
   - name: System
     description: Service status and metadata endpoints
 
