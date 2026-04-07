@@ -61,37 +61,34 @@ python -m build
 twine upload dist/*
 ```
 
-### Token Mechanism
+## Internal Methods
 
-Use internal token as follows: 
-```bash
-export CREDI_INTERNAL_TOKEN="token"
-```
-in shell, or giving it directly to the client:  
+Access internal query methods for specialized use cases:
+
+- **Continuous predictions**: `_query_cts()`, `_query_cts_batch()` — Model regression scores
+- **DomainRel labels**: `_query_domainrel()`, `_query_domainrel_batch()` — Ground-truth binary labels
+- **DQR labels**: `_query_dqr()`, `_query_dqr_batch()` — Ground-truth regression labels
+
+Example:
+
 ```python
-from credigraph import CrediGraphClient
+from credigraph import _query_dqr, _query_domainrel, _query_cts
 
-client = CrediGraphClient(token="token")
+# DQR regression labels (ground-truth pc1)
+dqr_result = _query_dqr("apnews.com")
+# {"domain": "apnews.com", "credibility_level": 0.77}
 
-result = client.query_internal("apnews.com")
-print(result)
-# Output example:
-# {
-#   "domain": "apnews.com",
-#   "credibility_level": 0.85,
-#   "credible": True,
-# }
+# DomainRel binary labels (ground-truth bin)
+dr_result = _query_domainrel("apnews.com")
+# {"domain": "apnews.com", "credible": true}
 
-results = client.query_internal_batch(["apnews.com", "cnn.com"])
-# Sort by credibility_level
-results = client.query_internal_batch(["example.com", "apnews.com"], order="ranked")
+# Continuous predictions (model regression)
+cts_result = _query_cts("apnews.com")
+# {"domain": "apnews.com", "credibility_level": 0.85}
 
-# Ground-truth mode: DQR regression + DomainRel binary
-gt_result = client.query_GT("apnews.com")
-gt_results = client.query_GT_batch(["apnews.com", "cnn.com"], order="ranked")
-
-# query_internal* uses model predictions only.
-# query_GT* uses ground-truth label sets only.
+# Batch queries with ranking
+dqr_results = _query_dqr_batch(["example.com", "apnews.com"], order="ranked")
+# Ranked by credibility_level descending
 ```
 
 ## Versioning 
