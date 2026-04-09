@@ -1,0 +1,91 @@
+:root {
+  --md-default-fg-color: #111827;
+  --md-default-bg-color: #f5f7ff;
+  --md-typeset-body-1: 1.02rem;
+  --md-typeset-font: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  font-variation-settings: 'wght' 450;
+}
+
+.md-content {
+  max-width: 980px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.md-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.md-footer {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.md-typeset blockquote {
+  border-left: 4px solid var(--md-primary-fg-color);
+  background: rgba(79, 70, 229, 0.06);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.admonition {
+  border-radius: 0.8rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(236, 241, 255, 0.55);
+}
+
+.admonition.note {
+  border-left: 4px solid #6366f1;
+}
+
+.admonition.tip {
+  border-left: 4px solid #10b981;
+}
+
+.md-typeset pre, .md-typeset code {
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.md-typeset pre {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.md-typeset table {
+  border-radius: 0.6rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.md-typeset th {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.md-content .md-card {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-default-fg-color: #e2e8f0;
+    --md-default-bg-color: #0b1220;
+  }
+  body {
+    background: #040617;
+  }
+  .md-typeset pre {
+    background: #111827;
+  }
+  .admonition {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+  }
+  .md-typeset th {
+    background: rgba(55, 65, 81, 0.7);
+  }
+}
