@@ -1,8 +1,11 @@
-# Versions
+# Version History
+CrediGraph API Changelog.
 
-## CrediGraph API Releases
+---
 
-| Version | Main points | Release date |
+## Releases
+
+| Version | Changes | Date |
 | --- | --- | --- |
 | 0.4.1 | Query functions separated into binary / regression. | Apr 2026 |
 | 0.4.0 | Updated query functions with alternate graph for binary, made that default score. | Mar 2026 |

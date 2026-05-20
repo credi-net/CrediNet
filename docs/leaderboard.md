@@ -1,9 +1,12 @@
 # CrediBench Leaderboard
 
-Benchmark results for domain credibility prediction. Both tasks use a **0–1 scale; higher is better**.
+Benchmark results for domain credibility prediction on the CrediBench dataset.
+
+**Evaluation Date:** May 2025  
+**Scale:** 0–1 (higher is better)
 
 
-## Tasks
+## Benchmarks
 
 - [Binary Classification](#binary-classification)
 - [Regression](#regression)

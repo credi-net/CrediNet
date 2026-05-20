@@ -1,17 +1,65 @@
 # API Configuration
 
-This page collects the main references for API contract, development workflow, and support.
+OpenAPI specification, client configuration, and support information.
 
-## API Contract
+---
 
-- OpenAPI spec: [openapi.yaml](https://github.com/credi-net/CrediNet/blob/main/openapi.yaml)
-- Developing guide (versioning, testing): [credigraph/README.md](https://github.com/credi-net/CrediNet/blob/main/credigraph/README.md)
+## Specification
 
-## Configuration Notes
+**OpenAPI Specification:** [openapi.yaml](../openapi.yaml)
 
-The client can be configured with request timeout parameters in the query helpers or client constructor.
+The REST API is fully documented in OpenAPI 3.0 format. Use this for:
+- HTTP endpoint definitions
+- Request/response schemas
+- API status codes and error handling
+
+---
+
+## Client Configuration
+
+### Timeout
+
+All query functions accept an optional `timeout` parameter (in seconds):
+
+```python
+from credigraph import query, CrediGraphClient
+
+# Function level
+result = query("apnews.com", timeout=15)
+
+# Client level
+client = CrediGraphClient(timeout=15)
+result = client.query("apnews.com")
+```
+
+Default: 10 seconds
+
+---
+
+## Health Checks
+
+Check API health before querying:
+
+```python
+import requests
+from credigraph import CrediGraphClient
+
+client = CrediGraphClient()
+response = requests.post(f"{client.api_url}/health")
+# {"status": "ok", "api_version": "0.4.1"}
+```
+
+---
+
+## Development
+
+- **Testing Guide:** [credigraph/README.md](https://github.com/credi-net/CrediNet/blob/main/credigraph/README.md)
+- **Main README:** [README.md](https://github.com/credi-net/CrediNet/blob/main/README.md)
+
+---
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
-- **Documentation**: See also the API Repo's [README.md](https://github.com/credi-net/CrediNet/blob/main/README.md) for public usage and the [dev guide](https://github.com/credi-net/CrediNet/blob/main/credigraph/README.md) for developer workflow. For remaining questions, [contact us](mailto:emma.kondrup@mila.quebec).
+- **Issues & Bug Reports:** [GitHub Issues](https://github.com/credi-net/CrediNet/issues)
+- **Questions:** [Contact us](mailto:emma.kondrup@mila.quebec)
+- **API Status:** [Hugging Face Spaces](https://huggingface.co/spaces/credi-net/CrediNet)
